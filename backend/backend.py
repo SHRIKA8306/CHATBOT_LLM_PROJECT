@@ -33,9 +33,11 @@ def get_connection():
     return mysql.connector.connect(
         host=os.getenv("MYSQL_HOST", "localhost"),
         user=os.getenv("MYSQL_USER", "root"),
-        password=os.getenv("MYSQL_PASSWORD", ""),
+        password=os.getenv("MYSQL_PASSWORD", "2501"),
         database=os.getenv("MYSQL_DATABASE", "chatbot_db"),
+        auth_plugin="mysql_native_password"
     )
+
 
 
 # ✅ Ensure table exists
@@ -77,12 +79,20 @@ async def chat(request: Request):
         conn.commit()
 
         # ✅ Call Groq LLM
-        response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=[{"role": "user", "content": user_msg}],
-)
+        def send_to_groq(user_msg: str) -> str:
+            prompt = f"""
+            You are a Women's Safety Assistant. ONLY answer questions related to women's safety in India.
+            Include: safety tips, Indian laws, emergency numbers, and helplines.
+            If the question is unrelated, reply: "Sorry, I can only answer questions about women's safety."
 
-        bot_reply = response.choices[0].message.content
+            User Question: {user_msg}
+            """
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content or ""
+        bot_reply = send_to_groq(user_msg)
 
         # ✅ Save bot reply
         cursor.execute("UPDATE chat_history SET bot_reply = %s WHERE id = %s", (bot_reply, chat_id))
