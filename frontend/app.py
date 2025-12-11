@@ -2,8 +2,8 @@ import streamlit as st
 import requests
 from streamlit_chat import message
 
-st.set_page_config(page_title="Chatbot (FastAPI + Groq)", layout="centered")
-st.markdown("<h2 style='text-align:center;'>🤖 AI Chatbot with FastAPI + MySQL + Groq</h2>", unsafe_allow_html=True)
+st.set_page_config(page_title="Women's Safety Assistant", layout="centered")
+st.markdown("<h2 style='text-align:left;'>🤖 Women's Safety AI Assistant</h2>", unsafe_allow_html=True)
 
 API_URL = "http://127.0.0.1:8000/chat"
 
