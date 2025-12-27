@@ -1,5 +1,6 @@
 import mysql.connector
 import hashlib
+import re
 import os
 from dotenv import load_dotenv
 
@@ -49,7 +50,6 @@ def register_user(username, email, password):
         conn.close()
 
 def authenticate_user(username, password):
-    password_hash = hash_password(password)
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, email FROM users WHERE username = %s AND password_hash = %s",
