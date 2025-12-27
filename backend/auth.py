@@ -18,33 +18,34 @@ def get_connection():
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-def create_users_table():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(255) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    cursor.close()
-    conn.close()
+def is_strong_password(password):
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters"
+    if not re.search(r"[A-Z]", password):
+        return False, "Must include uppercase letter"
+    if not re.search(r"[a-z]", password):
+        return False, "Must include lowercase letter"
+    if not re.search(r"\d", password):
+        return False, "Must include number"
+    if not re.search(r"[!@#$%^&*]", password):
+        return False, "Must include special character"
+    return True, "Strong password"
 
 def register_user(username, email, password):
-    password_hash = hash_password(password)
+    strong, msg = is_strong_password(password)
+    if not strong:
+        return False, msg
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
-                       (username, email, password_hash))
+        cursor.execute(
+            "INSERT INTO users (username,email,password_hash) VALUES (%s,%s,%s)",
+            (username, email, hash_password(password))
+        )
         conn.commit()
-        return True
+        return True, "Registered successfully"
     except mysql.connector.IntegrityError:
-        return False  # Username or email already exists
+        return False, "Username or email already exists"
     finally:
         cursor.close()
         conn.close()
@@ -52,12 +53,32 @@ def register_user(username, email, password):
 def authenticate_user(username, password):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, email FROM users WHERE username = %s AND password_hash = %s",
-                   (username, password_hash))
+    cursor.execute(
+        "SELECT id,email FROM users WHERE username=%s AND password_hash=%s",
+        (username, hash_password(password))
+    )
     user = cursor.fetchone()
     cursor.close()
     conn.close()
-    return user  # Returns (id, email) if authenticated, None otherwise
+    return user
 
-# Initialize the table
-create_users_table()
+def reset_password(username, new_password):
+    strong, msg = is_strong_password(new_password)
+    if not strong:
+        return False, msg
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
+    user = cursor.fetchone()
+    if not user:
+        cursor.close()
+        conn.close()
+        return False, "Username does not exist"
+    cursor.execute(
+        "UPDATE users SET password_hash=%s WHERE username=%s",
+        (hash_password(new_password), username)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return True, "Password reset successfully"
