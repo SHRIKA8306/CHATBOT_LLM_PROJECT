@@ -8,10 +8,10 @@ load_dotenv()
 
 def get_connection():
     return mysql.connector.connect(
-        host=os.getenv("MYSQL_HOST", "localhost"),
-        user=os.getenv("MYSQL_USER", "root"),
-        password=os.getenv("MYSQL_PASSWORD", "2501"),
-        database=os.getenv("MYSQL_DATABASE", "chatbot_db"),
+        host=os.getenv("MYSQL_HOST"),
+        user=os.getenv("MYSQL_USER"),
+        password=os.getenv("MYSQL_PASSWORD"),
+        database=os.getenv("MYSQL_DATABASE"),
         auth_plugin="mysql_native_password"
     )
 
