@@ -2,4 +2,4 @@
 "backend/.env"
 error.log
 __pycache__/
-*.pyc
+right_side.cpython-312.pyc
