@@ -1,5 +1,4 @@
 *.env 
 "backend/.env"
 error.log
-__pycache__/
-*.pyc
+
