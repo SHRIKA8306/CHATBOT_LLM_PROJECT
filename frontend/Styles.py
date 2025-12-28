@@ -1,7 +1,7 @@
 import streamlit as st
 
 def apply_styles():
-    """Apply all custom CSS styles to the Streamlit app"""
+
     st.markdown("""
     <style>
     /* ---------- FULL PAGE BACKGROUND FIX ---------- */
@@ -62,7 +62,7 @@ def apply_styles():
 
     /* ---------- SIDEBAR ---------- */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #5E2B97, #8E44AD) !important;
+        background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
         color: white;
     }
 
@@ -72,25 +72,66 @@ def apply_styles():
         color: white;
     }
 
-    /* ---------- CHAT INPUT FIX (No border overlap) ---------- */
+    /* ---------- CHAT INPUT FIX ---------- */
     .stChatInput textarea {
         border-radius: 20px !important;
-        border: none !important;
-        outline: none !important;
         padding: 15px !important;
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
     }
 
-    /* ---------- EXPANDER ---------- */
-    .st-expander {
-        background: white !important;
-        border-radius: 15px !important;
+    
+    /* ---------- CHAT MESSAGES ---------- */
+    .stChatMessage {
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC)  !important;
+        border-radius: 20px !important;
+        backdrop-filter: blur(10px);
+    }
+
+    /* ---------- SIDEBAR BUTTONS ---------- */
+    .stSidebar .stButton button {
+        background: transparent !important;
+        color: #5E2B97 !important;
+        border: none !important;
+        text-align: left !important;
+        padding: 5px 0 !important;
+        font-size: 14px !important;
+        height: auto !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+    }
+    .stSidebar .stButton button:hover {
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+        color: #5E2B97  !important;
+        padding: 10px  !important;
+    }
+
+    /* ---------- BUTTON CONTAINER ---------- */
+    .button-container .stButton button {
+        background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
+        color: white !important;
+        border-radius: 30px !important;
+        height: 50px !important;
+        font-size: 17px !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ---------- LOGOUT BUTTON ---------- */
+    .stSidebar .logout-button .stButton button {
+        background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
+        color: white !important;
+        border-radius: 30px !important;
+        height: 50px !important;
+        font-size: 17px !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     /* ---------- CHAT MESSAGES ---------- */
     .stChatMessage {
-        background: rgba(255, 255, 255, 0.7) !important;
-        border-radius: 15px !important;
-        backdrop-filter: blur(10px);
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+        border-radius: 20px !important;
     }
+            
     </style>
     """, unsafe_allow_html=True)

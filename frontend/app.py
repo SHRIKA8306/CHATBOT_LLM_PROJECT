@@ -3,6 +3,7 @@ import requests
 from streamlit_chat import message
 from right_side import show_right_sidebar
 from Styles import apply_styles
+
 st.set_page_config(
     page_title="Women's Safety Assistant",
     layout="wide",
@@ -18,8 +19,9 @@ st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
 
-# ---------------- ULTRA ATTRACTIVE STYLES ----------------
+# ---------------- STYLES ----------------
 apply_styles()
+
 
 # ---------------- LOGIN / REGISTER ----------------
 if not st.session_state.logged_in:
@@ -35,7 +37,6 @@ if not st.session_state.logged_in:
             login_username = st.text_input("Username")
             login_password = st.text_input("Password", type="password")
 
-            # ---- SIDE BY SIDE BUTTONS ----
             col_login, col_register = st.columns(2)
             with col_login:
                 if st.button("Login"):
@@ -49,12 +50,12 @@ if not st.session_state.logged_in:
                         st.rerun()
                     else:
                         st.error("Invalid login details")
+
             with col_register:
                 if st.button("Create Account"):
                     st.session_state.auth_mode = "register"
                     st.rerun()
 
-            # ---- Forgot Password ----
             if st.button("Forgot Password?"):
                 st.session_state.forgot_mode = True
 
@@ -77,8 +78,7 @@ if not st.session_state.logged_in:
             reg_email = st.text_input("Email")
             reg_password = st.text_input("Password", type="password")
 
-            # ---- SIDE BY SIDE BUTTONS (Register + Back) ----
-            col_register, col_back = st.columns([1, 1])
+            col_register, col_back = st.columns(2)
             with col_register:
                 if st.button("Register"):
                     res = requests.post(
@@ -95,6 +95,7 @@ if not st.session_state.logged_in:
                         st.rerun()
                     else:
                         st.error("User already exists")
+
             with col_back:
                 if st.button("Back to Login"):
                     st.session_state.auth_mode = "login"
@@ -104,7 +105,6 @@ if not st.session_state.logged_in:
 else:
     with st.sidebar:
         st.markdown(f"## 👋 Hi, {st.session_state.username}")
-        st.markdown("### Stay Safe. Stay Informed.")
         st.markdown("---")
 
         if st.button("➕ New Chat"):
@@ -113,35 +113,39 @@ else:
 
         st.markdown("### Chat History")
 
+        # ChatGPT style sidebar scroll
         try:
-            response = requests.get(
-                f"{API_BASE_URL}/chat_history/{st.session_state.username}"
-            )
+            response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
             if response.status_code == 200:
                 history = response.json().get("chat_history", [])
-                for chat in history:
-                    with st.expander(chat["timestamp"][:19]):
-                        st.write(chat["user_message"])
+
+                with st.container(height=450):  # scroll inside sidebar itself
+                    for chat in history:
+                        preview = chat["user_message"].split("\n")[0][:70]  # 1st line only
+                        if st.button(preview, key=f"chat_{chat['id']}"):
+                            # Switch only main chat, history stays visible
+                            st.session_state.messages = [
+                                {"role": "user", "content": chat["user_message"]},
+                                {"role": "assistant", "content": chat["bot_reply"]}
+                            ]
+                            st.rerun()
         except:
             pass
 
-        st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
 
-        if st.button(" Logout"):
+        if st.button("Logout", key="logout_btn"):
             st.session_state.clear()
             st.rerun()
 
+    # -------- MAIN CHAT UI --------
     st.markdown("<h2> Women's Safety AI Assistant</h2>", unsafe_allow_html=True)
     left_col, right_col = st.columns([3, 1])
 
     API_URL = f"{API_BASE_URL}/chat"
 
     for i, chat in enumerate(st.session_state.messages):
-        message(
-            chat["content"],
-            is_user=(chat["role"] == "user"),
-            key=f"chat_{i}"
-        )
+        message(chat["content"], is_user=(chat["role"] == "user"), key=f"msg_{i}")
 
     if st.button("📞 Emergency & Helpline Numbers"):
         res = requests.post(
@@ -153,7 +157,7 @@ else:
         )
         if res.status_code == 200:
             reply = res.json()["reply"]
-            st.session_state.messages.append({"role": "bot", "content": reply})
+            st.session_state.messages.append({"role": "assistant", "content": reply})
             message(reply)
 
     user_input = st.chat_input("Ask about laws, safety, or emergencies...")
@@ -161,13 +165,10 @@ else:
         st.session_state.messages.append({"role": "user", "content": user_input})
         message(user_input, is_user=True)
 
-        res = requests.post(
-            API_URL,
-            json={"message": user_input, "user": st.session_state.username}
-        )
+        res = requests.post(API_URL, json={"message": user_input, "user": st.session_state.username})
         if res.status_code == 200:
             reply = res.json()["reply"]
-            st.session_state.messages.append({"role": "bot", "content": reply})
+            st.session_state.messages.append({"role": "assistant", "content": reply})
             message(reply)
 
     with right_col:
