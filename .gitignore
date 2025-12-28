@@ -3,3 +3,5 @@
 error.log
 __pycache__/
 right_side.cpython-312.pyc
+backend.cpython-312.pyc
+auth.cpython-312.pyc
