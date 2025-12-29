@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import base64
 from streamlit_chat import message
 from right_side import show_right_sidebar
 from Styles import apply_styles
@@ -22,7 +23,7 @@ st.session_state.setdefault("forgot_mode", False)
 # ---------------- STYLES ----------------
 apply_styles()
 
-# ---------------- QUERY PARAMS (FIXED – NO WARNING) ----------------
+# ---------------- QUERY PARAMS ----------------
 def _get_qp():
     return st.query_params
 
@@ -43,21 +44,53 @@ if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        st.markdown("<h1 style='text-align:center;'>👩‍⚖️ Women Safety Assistant</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align:center;color:#555;'>Your trusted legal & safety companion</p>", unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        # -------- HEADER (IMAGE + TITLE SAME LINE) --------
+        img_base64 = base64.b64encode(
+            open("logo.png", "rb").read()
+        ).decode()
 
+        st.markdown(
+            f"""
+            <div style="
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                margin-top:20px;
+                margin-bottom:20px;
+            ">
+                <img src="data:image/jpeg;base64,{img_base64}"
+                     style="
+                        width:150px;
+                        height:150px;
+                    object-fit:cover;
+                     " />
+                <div>
+                    <h1 style="margin:0;">Women Safety Assistant</h1>
+                    <p style="margin:0;color:#555;">
+                                    Your trusted legal & safety companion
+                    </p>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # -------- LOGIN --------
         if st.session_state.auth_mode == "login":
             st.subheader("Login")
             login_username = st.text_input("Username")
             login_password = st.text_input("Password", type="password")
 
             col_login, col_register = st.columns(2)
+
             with col_login:
                 if st.button("Login"):
                     res = requests.post(
                         f"{API_BASE_URL}/login",
-                        json={"username": login_username, "password": login_password}
+                        json={
+                            "username": login_username,
+                            "password": login_password
+                        }
                     )
                     if res.status_code == 200:
                         st.session_state.logged_in = True
@@ -80,7 +113,10 @@ if not st.session_state.logged_in:
                 if st.button("Reset Password"):
                     res = requests.post(
                         f"{API_BASE_URL}/forgot_password",
-                        json={"username": login_username, "new_password": new_password}
+                        json={
+                            "username": login_username,
+                            "new_password": new_password
+                        }
                     )
                     if res.status_code == 200:
                         st.success("Password updated successfully")
@@ -88,6 +124,7 @@ if not st.session_state.logged_in:
                     else:
                         st.error("Reset failed")
 
+        # -------- REGISTER --------
         else:
             st.subheader("Register")
             reg_username = st.text_input("Username")
@@ -95,6 +132,7 @@ if not st.session_state.logged_in:
             reg_password = st.text_input("Password", type="password")
 
             col_register, col_back = st.columns(2)
+
             with col_register:
                 if st.button("Register"):
                     res = requests.post(
@@ -130,7 +168,9 @@ else:
         st.markdown("### Chat History")
 
         try:
-            response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
+            response = requests.get(
+                f"{API_BASE_URL}/chat_history/{st.session_state.username}"
+            )
             if response.status_code == 200:
                 history = response.json().get("chat_history", [])
                 with st.container(height=450):
@@ -151,13 +191,17 @@ else:
             st.rerun()
 
     # ---------------- MAIN CHAT ----------------
-    st.markdown("<h2> Women's Safety AI Assistant</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Women's Safety AI Assistant</h2>", unsafe_allow_html=True)
 
     left_col, right_col = st.columns([3, 1])
     API_URL = f"{API_BASE_URL}/chat"
 
     for i, chat in enumerate(st.session_state.messages):
-        message(chat["content"], is_user=(chat["role"] == "user"), key=f"msg_{i}")
+        message(
+            chat["content"],
+            is_user=(chat["role"] == "user"),
+            key=f"msg_{i}"
+        )
 
     if st.button("📞 Emergency & Helpline Numbers"):
         res = requests.post(
@@ -169,19 +213,35 @@ else:
         )
         if res.status_code == 200:
             reply = res.json()["reply"]
-            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.messages.append(
+                {"role": "assistant", "content": reply}
+            )
             message(reply)
 
-    user_input = st.chat_input("Ask about laws, safety, or emergencies...")
+    user_input = st.chat_input(
+        "Ask about laws, safety, or emergencies..."
+    )
+
     if user_input:
-        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append(
+            {"role": "user", "content": user_input}
+        )
         message(user_input, is_user=True)
 
-        res = requests.post(API_URL, json={"message": user_input, "user": st.session_state.username})
+        res = requests.post(
+            API_URL,
+            json={
+                "message": user_input,
+                "user": st.session_state.username
+            }
+        )
         if res.status_code == 200:
             reply = res.json()["reply"]
-            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.messages.append(
+                {"role": "assistant", "content": reply}
+            )
             message(reply)
 
     with right_col:
         show_right_sidebar()
+
