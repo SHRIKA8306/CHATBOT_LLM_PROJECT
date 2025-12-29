@@ -19,6 +19,8 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
+# Track which chat history item is currently selected (keeps sidebar static)
+st.session_state.setdefault("selected_history", None)
 
 # ---------------- STYLES ----------------
 apply_styles()
@@ -176,12 +178,13 @@ else:
                 with st.container(height=450):
                     for chat in history:
                         preview = chat["user_message"].split("\n")[0][:70]
-                        if st.button(preview, key=f"chat_{chat['id']}"):
+                        clicked = st.button(preview, key=f"chat_{chat['id']}")
+                        if clicked:
                             st.session_state.messages = [
                                 {"role": "user", "content": chat["user_message"]},
                                 {"role": "assistant", "content": chat["bot_reply"]}
                             ]
-                            st.rerun()
+                            st.session_state.selected_history = chat['id']
         except:
             pass
 
