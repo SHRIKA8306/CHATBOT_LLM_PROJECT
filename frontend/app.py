@@ -22,6 +22,21 @@ st.session_state.setdefault("forgot_mode", False)
 # ---------------- STYLES ----------------
 apply_styles()
 
+# ---------------- QUERY PARAMS (FIXED – NO WARNING) ----------------
+def _get_qp():
+    return st.query_params
+
+def _set_qp(**kwargs):
+    st.query_params.update(kwargs)
+
+def _clear_qp():
+    st.query_params.clear()
+
+# Restore login from query params
+params = _get_qp()
+if params.get("logged_in") == "1" and params.get("user"):
+    st.session_state.logged_in = True
+    st.session_state.username = params.get("user")
 
 # ---------------- LOGIN / REGISTER ----------------
 if not st.session_state.logged_in:
@@ -47,6 +62,7 @@ if not st.session_state.logged_in:
                     if res.status_code == 200:
                         st.session_state.logged_in = True
                         st.session_state.username = login_username
+                        _set_qp(logged_in="1", user=login_username)
                         st.rerun()
                     else:
                         st.error("Invalid login details")
@@ -113,17 +129,14 @@ else:
 
         st.markdown("### Chat History")
 
-        # ChatGPT style sidebar scroll
         try:
             response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
             if response.status_code == 200:
                 history = response.json().get("chat_history", [])
-
-                with st.container(height=450):  # scroll inside sidebar itself
+                with st.container(height=450):
                     for chat in history:
-                        preview = chat["user_message"].split("\n")[0][:70]  # 1st line only
+                        preview = chat["user_message"].split("\n")[0][:70]
                         if st.button(preview, key=f"chat_{chat['id']}"):
-                            # Switch only main chat, history stays visible
                             st.session_state.messages = [
                                 {"role": "user", "content": chat["user_message"]},
                                 {"role": "assistant", "content": chat["bot_reply"]}
@@ -132,16 +145,15 @@ else:
         except:
             pass
 
-        st.markdown("<br><br>", unsafe_allow_html=True)
-
-        if st.button("Logout", key="logout_btn"):
+        if st.button("Logout"):
             st.session_state.clear()
+            _clear_qp()
             st.rerun()
 
-    # -------- MAIN CHAT UI --------
+    # ---------------- MAIN CHAT ----------------
     st.markdown("<h2> Women's Safety AI Assistant</h2>", unsafe_allow_html=True)
-    left_col, right_col = st.columns([3, 1])
 
+    left_col, right_col = st.columns([3, 1])
     API_URL = f"{API_BASE_URL}/chat"
 
     for i, chat in enumerate(st.session_state.messages):
