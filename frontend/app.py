@@ -19,7 +19,6 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
-# Track which chat history item is currently selected (keeps sidebar static)
 st.session_state.setdefault("selected_history", None)
 
 # ---------------- STYLES ----------------
@@ -35,21 +34,23 @@ def _set_qp(**kwargs):
 def _clear_qp():
     st.query_params.clear()
 
-# Restore login from query params
 params = _get_qp()
+
+# Restore login from query params (prevents redirect to login page)
 if params.get("logged_in") == "1" and params.get("user"):
     st.session_state.logged_in = True
     st.session_state.username = params.get("user")
+
+# Restore last clicked chat after page reload
+if params.get("history"):
+    st.session_state.selected_history = params.get("history")
 
 # ---------------- LOGIN / REGISTER ----------------
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # -------- HEADER (IMAGE + TITLE SAME LINE) --------
-        img_base64 = base64.b64encode(
-            open("logo.png", "rb").read()
-        ).decode()
+        img_base64 = base64.b64encode(open("logo.png", "rb").read()).decode()
 
         st.markdown(
             f"""
@@ -64,12 +65,12 @@ if not st.session_state.logged_in:
                      style="
                         width:150px;
                         height:150px;
-                    object-fit:cover;
+                        object-fit:cover;
                      " />
                 <div>
                     <h1 style="margin:0;">Women Safety Assistant</h1>
                     <p style="margin:0;color:#555;">
-                                    Your trusted legal & safety companion
+                        Your trusted legal & safety companion
                     </p>
                 </div>
             </div>
@@ -77,7 +78,6 @@ if not st.session_state.logged_in:
             unsafe_allow_html=True
         )
 
-        # -------- LOGIN --------
         if st.session_state.auth_mode == "login":
             st.subheader("Login")
             login_username = st.text_input("Username")
@@ -89,15 +89,13 @@ if not st.session_state.logged_in:
                 if st.button("Login"):
                     res = requests.post(
                         f"{API_BASE_URL}/login",
-                        json={
-                            "username": login_username,
-                            "password": login_password
-                        }
+                        json={"username": login_username, "password": login_password}
                     )
                     if res.status_code == 200:
                         st.session_state.logged_in = True
                         st.session_state.username = login_username
                         _set_qp(logged_in="1", user=login_username)
+                        st.session_state.selected_history = None
                         st.rerun()
                     else:
                         st.error("Invalid login details")
@@ -115,10 +113,7 @@ if not st.session_state.logged_in:
                 if st.button("Reset Password"):
                     res = requests.post(
                         f"{API_BASE_URL}/forgot_password",
-                        json={
-                            "username": login_username,
-                            "new_password": new_password
-                        }
+                        json={"username": login_username, "new_password": new_password}
                     )
                     if res.status_code == 200:
                         st.success("Password updated successfully")
@@ -126,7 +121,6 @@ if not st.session_state.logged_in:
                     else:
                         st.error("Reset failed")
 
-        # -------- REGISTER --------
         else:
             st.subheader("Register")
             reg_username = st.text_input("Username")
@@ -139,11 +133,7 @@ if not st.session_state.logged_in:
                 if st.button("Register"):
                     res = requests.post(
                         f"{API_BASE_URL}/register",
-                        json={
-                            "username": reg_username,
-                            "email": reg_email,
-                            "password": reg_password
-                        }
+                        json={"username": reg_username, "email": reg_email, "password": reg_password}
                     )
                     if res.status_code == 200:
                         st.success("Account created successfully")
@@ -165,29 +155,45 @@ else:
 
         if st.button("➕ New Chat"):
             st.session_state.messages = []
+            st.session_state.selected_history = None
+            _clear_qp()
             st.rerun()
 
         st.markdown("### Chat History")
 
         try:
-            response = requests.get(
-                f"{API_BASE_URL}/chat_history/{st.session_state.username}"
-            )
+            response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
             if response.status_code == 200:
                 history = response.json().get("chat_history", [])
-                with st.container(height=450):
+
+                # Restore chat if already selected before reload
+                if params.get("history"):
                     for chat in history:
-                        preview = chat["user_message"].split("\n")[0][:70]
-                        clicked = st.button(preview, key=f"chat_{chat['id']}")
-                        if clicked:
+                        if str(chat["id"]) == params.get("history"):
                             st.session_state.messages = [
                                 {"role": "user", "content": chat["user_message"]},
                                 {"role": "assistant", "content": chat["bot_reply"]}
                             ]
+                            st.session_state.selected_history = chat["id"]
+                            break
+
+                with st.container(height=450):
+                    for chat in history:
+                        preview = chat["user_message"].split("\n")[0][:70]
+                        clicked = st.button(preview, key=f"chat_{chat['id']}")
+
+                        if clicked:
                             st.session_state.selected_history = chat['id']
+                            st.session_state.messages = [
+                                {"role": "user", "content": chat["user_message"]},
+                                {"role": "assistant", "content": chat["bot_reply"]}
+                            ]
+                            _set_qp(history=str(chat['id']))
+                            st.rerun()
         except:
             pass
 
+        # Logout button (keeps original behavior)
         if st.button("Logout"):
             st.session_state.clear()
             _clear_qp()
@@ -200,51 +206,29 @@ else:
     API_URL = f"{API_BASE_URL}/chat"
 
     for i, chat in enumerate(st.session_state.messages):
-        message(
-            chat["content"],
-            is_user=(chat["role"] == "user"),
-            key=f"msg_{i}"
-        )
+        message(chat["content"], is_user=(chat["role"] == "user"), key=f"msg_{i}")
 
     if st.button("📞 Emergency & Helpline Numbers"):
         res = requests.post(
             API_URL,
-            json={
-                "message": "Give me all women's safety helpline numbers in India",
-                "user": st.session_state.username
-            }
+            json={"message": "Give me all women's safety helpline numbers in India", "user": st.session_state.username}
         )
         if res.status_code == 200:
             reply = res.json()["reply"]
-            st.session_state.messages.append(
-                {"role": "assistant", "content": reply}
-            )
+            st.session_state.messages.append({"role": "assistant", "content": reply})
             message(reply)
 
-    user_input = st.chat_input(
-        "Ask about laws, safety, or emergencies..."
-    )
+    user_input = st.chat_input("Ask about laws, safety, or emergencies...")
 
     if user_input:
-        st.session_state.messages.append(
-            {"role": "user", "content": user_input}
-        )
+        st.session_state.messages.append({"role": "user", "content": user_input})
         message(user_input, is_user=True)
 
-        res = requests.post(
-            API_URL,
-            json={
-                "message": user_input,
-                "user": st.session_state.username
-            }
-        )
+        res = requests.post(API_URL, json={"message": user_input, "user": st.session_state.username})
         if res.status_code == 200:
             reply = res.json()["reply"]
-            st.session_state.messages.append(
-                {"role": "assistant", "content": reply}
-            )
+            st.session_state.messages.append({"role": "assistant", "content": reply})
             message(reply)
 
     with right_col:
         show_right_sidebar()
-
