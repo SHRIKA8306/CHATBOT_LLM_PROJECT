@@ -72,21 +72,6 @@ def apply_styles():
         color: white;
     }
 
-    /* ---------- CHAT INPUT FIX ---------- */
-    .stChatInput textarea {
-        border-radius: 20px !important;
-        padding: 15px !important;
-        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
-    }
-
-    
-    /* ---------- CHAT MESSAGES ---------- */
-    .stChatMessage {
-        background: linear-gradient(135deg, #FFD6E8, #C18CFC)  !important;
-        border-radius: 20px !important;
-        backdrop-filter: blur(10px);
-    }
-
     /* ---------- SIDEBAR BUTTONS ---------- */
     .stSidebar .stButton button {
         background: transparent !important;
@@ -126,12 +111,7 @@ def apply_styles():
         border: none !important;
         box-shadow: none !important;
     }
-
-    /* ---------- CHAT MESSAGES ---------- */
-    .stChatMessage {
-        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
-        border-radius: 20px !important;
-    }
+    
             
     </style>
     """, unsafe_allow_html=True)
