@@ -1,117 +1,77 @@
 import streamlit as st
 
 def apply_styles():
-
     st.markdown("""
     <style>
-    /* ---------- FULL PAGE BACKGROUND FIX ---------- */
-    html, body, [data-testid="stAppViewContainer"], .stApp {
+
+    /* ---------- GLOBAL BACKGROUND ---------- */
+    .stApp {
         background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
-        min-height: 100vh !important;
+        min-height: 100vh;
     }
 
-    /* Remove default padding/margins */
-    .main .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
+    /* ---------- SIDEBAR BASE ---------- */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarContent"] {
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
     }
 
-    /* ---------- HEADINGS ---------- */
-    h1, h2, h3 {
-        color: #5E2B97;
-        font-weight: 800;
-    }
-
-    /* ---------- GLASS CARD ---------- */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.55);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border-radius: 24px;
-        padding: 35px;
-        box-shadow: 0 20px 40px rgba(94, 43, 151, 0.25);
-    }
-
-    /* ---------- INPUT FIX ---------- */
-    .stTextInput input {
-        border-radius: 18px !important;
-        height: 48px !important;
+    /* ---------- ALL SIDEBAR ELEMENTS ---------- */
+    [data-testid="stSidebar"] * {
+        background-color: transparent !important;
+        box-shadow: none !important;
         border: none !important;
-        outline: none !important;
-        padding-left: 15px !important;
+        color: #2d1b47 !important;
     }
 
-    /* ---------- BUTTON ---------- */
-    .stButton button {
-        background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
-        color: white !important;
-        border-radius: 30px !important;
-        height: 50px !important;
-        font-size: 17px !important;
-        font-weight: 700 !important;
+    /* ---------- INPUTS / TEXTAREAS / SELECTS IN SIDEBAR ---------- */
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] textarea,
+    [data-testid="stSidebar"] select {
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+        border-radius: 12px;
         border: none !important;
-        box-shadow: 0 10px 25px rgba(232, 74, 159, 0.45);
-        transition: 0.3s ease;
-        padding: 25px !important;
+        padding: 6px 10px;
+        color: #2d1b47 !important;
     }
 
-    .stButton button:hover {
-        transform: scale(1.04);
-        box-shadow: 0 15px 35px rgba(232, 74, 159, 0.65);
-    }
-
-    /* ---------- SIDEBAR ---------- */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
-        color: white;
-    }
-
-    [data-testid="stSidebar"] h3, 
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] p {
-        color: white;
-    }
-
-    /* ---------- SIDEBAR BUTTONS ---------- */
-    .stSidebar .stButton button {
+    /* ---------- CHAT MESSAGES ---------- */
+    [data-testid="stChatMessage"] {
         background: transparent !important;
-        color: #5E2B97 !important;
-        border: none !important;
-        text-align: left !important;
-        padding: 5px 0 !important;
-        font-size: 14px !important;
-        height: auto !important;
-        border-radius: 10px !important;
         box-shadow: none !important;
+        padding: 8px 0 !important;
     }
-    .stSidebar .stButton button:hover {
+
+    [data-testid="stChatMessage"] p {
+        color: #2d1b47 !important;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+
+    /* ---------- MAIN PAGE CHAT INPUT CONTAINER ---------- */
+    [data-testid="stChatInput"] {
         background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
-        color: #5E2B97  !important;
-        padding: 10px  !important;
+        border-radius: 15px !important;
+        padding: 6px 12px !important;
     }
 
-    /* ---------- BUTTON CONTAINER ---------- */
-    .button-container .stButton button {
-        background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
-        color: white !important;
-        border-radius: 30px !important;
-        height: 50px !important;
-        font-size: 17px !important;
+    [data-testid="stChatInput"] textarea,
+    [data-testid="stChatInput"] input {
+        background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+        border-radius: 12px !important;
+        color: #2d1b47 !important;
         border: none !important;
-        box-shadow: none !important;
+        padding: 8px 12px !important;
     }
 
-    /* ---------- LOGOUT BUTTON ---------- */
-    .stSidebar .logout-button .stButton button {
+    /* ---------- SEND BUTTON ---------- */
+    [data-testid="stChatInput"] button {
         background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
         color: white !important;
-        border-radius: 30px !important;
-        height: 50px !important;
-        font-size: 17px !important;
+        border-radius: 20px !important;
         border: none !important;
-        box-shadow: none !important;
     }
-    
-            
+
     </style>
     """, unsafe_allow_html=True)
+    
