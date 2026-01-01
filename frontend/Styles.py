@@ -22,6 +22,18 @@ def apply_styles():
         box-shadow: none !important;
         border: none !important;
         color: #2d1b47 !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* ---------- HOVER EFFECTS FOR SIDEBAR ELEMENTS ---------- */
+    [data-testid="stSidebar"] button:hover,
+    [data-testid="stSidebar"] input:hover,
+    [data-testid="stSidebar"] textarea:hover,
+    [data-testid="stSidebar"] select:hover,
+    [data-testid="stSidebar"] .stExpander:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        transform: scale(1.03);
+        border-radius: 12px;
     }
 
     /* ---------- INPUTS / TEXTAREAS / SELECTS IN SIDEBAR ---------- */
@@ -72,6 +84,10 @@ def apply_styles():
         border: none !important;
     }
 
+    [data-testid="stChatInput"] button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(94, 43, 151, 0.4);
+    }
+
     </style>
     """, unsafe_allow_html=True)
-    
