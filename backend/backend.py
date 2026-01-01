@@ -136,6 +136,7 @@ async def chat(request: Request):
         Include: safety tips, Indian laws, emergency numbers, and helplines.
         If unrelated, reply: Sorry, I can only answer questions about women's safety.
 
+
         User Question: {user_msg}
         """
         response = client.chat.completions.create(
