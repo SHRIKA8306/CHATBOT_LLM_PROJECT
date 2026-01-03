@@ -1,6 +1,8 @@
 import streamlit as st
 
 def show_right_sidebar():
+    
+
     st.markdown("### Women's Safety Resources")
 
     # Emergency Helplines
@@ -24,4 +26,6 @@ def show_right_sidebar():
         - Right against domestic violence  
         - Right to file a complaint against harassment  
         """)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
