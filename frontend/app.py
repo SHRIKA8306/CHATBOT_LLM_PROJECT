@@ -175,8 +175,6 @@ if not st.session_state.logged_in:
 else:
     with st.sidebar:
         st.markdown(f"## Hi, {st.session_state.username}")
-        st.markdown("---")
-
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.rerun()
@@ -204,13 +202,10 @@ else:
                             st.rerun()
         except Exception:
             pass
-
-        st.markdown('<div class="ws-sidebar-footer">', unsafe_allow_html=True)
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
     top_l, top_r = st.columns([4, 2], vertical_alignment="center")
     with top_l:
@@ -231,8 +226,6 @@ else:
                 reply = api_chat("Give me all women's safety helpline numbers in India")
                 st.session_state.messages.append({"role": "assistant", "content": reply})
                 st.rerun()
-
-    st.markdown("---")
 
     body_l, body_r = st.columns([3, 1], gap="large")
     with body_l:

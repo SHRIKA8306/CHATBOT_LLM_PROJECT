@@ -22,15 +22,9 @@ def apply_styles():
           --bottom-border: rgba(182,156,255,0.28);
         }
 
-        html, body { background: transparent; }
-
-        /* ===== App background (girly gradient) ===== */
-        [data-testid="stAppViewContainer"]{
-          background:
-            radial-gradient(1000px 700px at 12% 10%, rgba(255, 79, 167, 0.25), transparent 60%),
-            radial-gradient(900px 650px at 88% 20%, rgba(182, 156, 255, 0.28), transparent 55%),
-            linear-gradient(135deg, #FFF6FB, #F3EEFF) !important;
-          min-height: 100vh;
+        html, body, [data-testid="stAppViewContainer"], .stApp {
+          background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+          min-height: 100vh !important;
         }
 
         .main .block-container{
@@ -70,10 +64,7 @@ def apply_styles():
            ========================================================= */
         [data-testid="stSidebar"],
         [data-testid="stSidebarContent"]{
-          background:
-            radial-gradient(700px 500px at 20% 10%, rgba(255,79,167,0.18), transparent 60%),
-            radial-gradient(700px 500px at 80% 30%, rgba(182,156,255,0.22), transparent 60%),
-            linear-gradient(180deg, #FFE8F4, #F2EBFF) !important;
+          background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
         }
 
         [data-testid="stSidebar"] *{
@@ -87,7 +78,7 @@ def apply_styles():
           background: rgba(255,255,255,0.35) !important;
           border: 1px solid rgba(232, 74, 159, 0.18) !important;
           border-radius: 18px !important;
-          padding: 14px 12px 12px 12px !important;
+          padding: 20px !important;
           box-shadow: 0 14px 30px rgba(45, 27, 71, 0.12) !important;
           backdrop-filter: blur(10px);
         }
@@ -105,19 +96,21 @@ def apply_styles():
           width: 100%;
           text-align: left !important;
           justify-content: flex-start !important;
-          border-radius: 14px !important;
-          padding: 10px 12px !important;
-          border: 1px solid rgba(45,27,71,0.10) !important;
-          background: rgba(255,255,255,0.55) !important;
+          border-radius: 10px !important;
+          padding: 10px 10px !important;
+          border: none !important;
+          background: transparent !important;
+          color: #5E2B97 !important;
+          font-size: 14px !important;
+          height: auto !important;
+          box-shadow: none !important;
           transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, background 140ms ease;
         }
 
         [data-testid="stSidebar"] .stButton > button:hover{
-          transform: translateY(-1px);
-          box-shadow: 0 12px 24px rgba(45, 27, 71, 0.14) !important;
-          filter: brightness(1.03);
-          background: linear-gradient(90deg, rgba(255,79,167,0.20), rgba(182,156,255,0.18)) !important;
-          border: 1px solid rgba(232, 74, 159, 0.18) !important;
+          background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+          color: #5E2B97 !important;
+          padding: 10px 10px !important;
         }
 
         .ws-sidebar-footer{
@@ -136,21 +129,31 @@ def apply_styles():
           text-align: center !important;
           justify-content: center !important;
           font-weight: 700 !important;
-          border: 1px solid rgba(255, 79, 167, 0.28) !important;
-          background: linear-gradient(90deg, rgba(255,79,167,0.25), rgba(182,156,255,0.20)) !important;
+          border: none !important;
+          background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
+          color: white !important;
+          border-radius: 30px !important;
+          height: 50px !important;
+          font-size: 17px !important;
+          box-shadow: none !important;
         }
 
         /* Main page buttons */
         .stButton > button{
-          border-radius: 14px !important;
-          border: 1px solid rgba(232, 74, 159, 0.22) !important;
-          background: linear-gradient(90deg, rgba(232,74,159,0.18), rgba(182,156,255,0.18)) !important;
-          transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+          background: linear-gradient(90deg, #5E2B97, #E84A9F) !important;
+          color: white !important;
+          border-radius: 30px !important;
+          height: 50px !important;
+          font-size: 17px !important;
+          font-weight: 700 !important;
+          border: none !important;
+          box-shadow: 0 10px 25px rgba(232, 74, 159, 0.45);
+          transition: 0.3s ease;
+          padding: 25px !important;
         }
         .stButton > button:hover{
-          transform: translateY(-1px);
-          box-shadow: 0 14px 30px rgba(45, 27, 71, 0.16);
-          filter: brightness(1.05);
+          transform: scale(1.04);
+          box-shadow: 0 15px 35px rgba(232, 74, 159, 0.65);
         }
 
         /* Chat bubbles */
@@ -178,17 +181,33 @@ def apply_styles():
            REMOVE BLACK STRIP BEHIND CHAT INPUT
            (This is the key fix)
            ========================================================= */
-        [data-testid="stBottomBlockContainer"]{
-          background: linear-gradient(135deg, var(--bottom-1), var(--bottom-2)) !important;
-          border-top: 1px solid var(--bottom-border) !important;
-          box-shadow: 0 -14px 34px rgba(45, 27, 71, 0.10) !important;
-        } /* [web:534] */
+        /* Apply gradient border to the outer chat input box */
+div[data-testid="stChatInputContainer"] {
+    border: 2px solid transparent !important;
+    border-image: linear-gradient(90deg, #E84A9F, #B69CFF) 1 !important;
+    border-radius: 22px !important;
+    background: rgba(255,255,255,0.6) !important; /* light blend */
+    box-shadow: var(--shadow) !important;
+    padding: 6px !important;
+}
 
-        /* Sometimes the floating container is the one that appears dark */
-        .stChatFloatingInputContainer{
-          background: linear-gradient(135deg, var(--bottom-1), var(--bottom-2)) !important;
-          border-top: 1px solid var(--bottom-border) !important;
-        } /* [web:537] */
+/* Also fix floating wrapper if Streamlit uses it */
+/* Make bottom chat bar same as top gradient header */
+.stChatFloatingInputContainer,
+div[data-testid="stChatInputContainer"],
+div[data-testid="stBottomBlockContainer"] {
+    background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+/* Gradient outline when clicking inside input */
+div[data-testid="stChatInput"] textarea:focus,
+div[data-testid="stChatInput"] input:focus {
+    border: 2px solid transparent !important;
+    border-image: linear-gradient(90deg, #E84A9F, #B69CFF) 1 !important;
+    outline: none !important;
+}
+
 
         /* =========================================================
            CHAT INPUT COLORS
