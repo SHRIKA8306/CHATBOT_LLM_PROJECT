@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import base64
-
 from right_side import show_right_sidebar
 from Styles import apply_styles
 
@@ -20,6 +19,7 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
+# Track which chat history item is currently selected (keeps sidebar static)
 st.session_state.setdefault("selected_history", None)
 
 apply_styles()
@@ -34,8 +34,8 @@ def _set_qp(**kwargs):
 def _clear_qp():
     st.query_params.clear()
 
+# Restore login from query params
 params = _get_qp()
-
 if params.get("logged_in") == "1" and params.get("user"):
     st.session_state.logged_in = True
     st.session_state.username = params.get("user")
@@ -72,7 +72,10 @@ if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        img_base64 = base64.b64encode(open("logo.png", "rb").read()).decode()
+        # -------- HEADER (IMAGE + TITLE SAME LINE) --------
+        img_base64 = base64.b64encode(
+            open("logo.png", "rb").read()
+        ).decode()
 
         st.markdown(
             f"""
@@ -95,6 +98,7 @@ if not st.session_state.logged_in:
             unsafe_allow_html=True
         )
 
+        # -------- LOGIN --------
         if st.session_state.auth_mode == "login":
             st.subheader("Login")
             login_username = st.text_input("Username", key="login_username")
@@ -106,7 +110,10 @@ if not st.session_state.logged_in:
                 if st.button("Login", use_container_width=True):
                     res = requests.post(
                         f"{API_BASE_URL}/login",
-                        json={"username": login_username, "password": login_password}
+                        json={
+                            "username": login_username,
+                            "password": login_password
+                        }
                     )
                     if res.status_code == 200:
                         st.session_state.logged_in = True
@@ -172,8 +179,6 @@ else:
 
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
-            st.session_state.selected_history = None
-            _clear_qp()
             st.rerun()
 
         st.markdown("### Chat History")
