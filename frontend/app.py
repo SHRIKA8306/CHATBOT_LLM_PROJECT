@@ -179,7 +179,7 @@ else:
         _set_qp(history=str(st.session_state.selected_history))
 
     with st.sidebar:
-        st.markdown(f"## Hi, {st.session_state.username}")
+        st.markdown(f"<h2 style='font-weight:600; font-size:30px'>Hi {st.session_state.username}</h2>", unsafe_allow_html=True)
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None

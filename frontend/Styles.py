@@ -56,8 +56,7 @@ def apply_styles():
           margin: 0 !important;
           padding: 0 !important;
         }
-        section[data-testid="stSidebar"] > div{ padding-top: 0 !important; }
-        [data-testid="stSidebarContent"]{ padding-top: 0 !important; }
+       
 
         /* =========================================================
            SIDEBAR (LEFT PANEL) + STICKY LOGOUT FOOTER
@@ -65,30 +64,21 @@ def apply_styles():
         [data-testid="stSidebar"],
         [data-testid="stSidebarContent"]{
           background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
         }
-
-        [data-testid="stSidebar"] *{
+          [data-testid="stSidebar"] *{
           background: transparent !important;
           color: var(--ws-text) !important;
           border: none !important;
           box-shadow: none !important;
         }
-
-        [data-testid="stSidebarContent"] > div{
-          background: rgba(255,255,255,0.35) !important;
-          border: 1px solid rgba(232, 74, 159, 0.18) !important;
-          border-radius: 18px !important;
-          padding: 20px !important;
-          box-shadow: 0 14px 30px rgba(45, 27, 71, 0.12) !important;
-          backdrop-filter: blur(10px);
-        }
-
         [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"]{
           background: rgba(255,255,255,0.28) !important;
           border: 1px solid rgba(182,156,255,0.18) !important;
           border-radius: 16px !important;
-          padding: 10px !important;
-          padding-bottom: 70px !important;
+          padding: 0px !important;
+          padding-bottom: 0px !important;
           box-shadow: 0 10px 22px rgba(45, 27, 71, 0.08) !important;
         }
 
@@ -106,19 +96,17 @@ def apply_styles():
           box-shadow: none !important;
           transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, background 140ms ease;
         }
-
         [data-testid="stSidebar"] .stButton > button:hover{
           background: linear-gradient(135deg, #FFD6E8, #C18CFC) !important;
           color: #5E2B97 !important;
-          padding: 10px 10px !important;
         }
 
         .ws-sidebar-footer{
           position: sticky;
           bottom: 0;
-          padding-top: 10px;
-          padding-bottom: 10px;
-          margin-top: 10px;
+          padding-top: 0px;
+          padding-bottom: 0px;
+          margin-top: 0px;
           background: linear-gradient(180deg, rgba(255,232,244,0.0), rgba(255,232,244,0.92));
           backdrop-filter: blur(10px);
           border-top: 1px solid rgba(232, 74, 159, 0.18);
