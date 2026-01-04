@@ -200,53 +200,7 @@ div[data-testid="stBottomBlockContainer"] {
     border: none !important;
     box-shadow: none !important;
 }
-/* Gradient outline when clicking inside input */
-div[data-testid="stChatInput"] textarea:focus,
-div[data-testid="stChatInput"] input:focus {
-    border: 2px solid transparent !important;
-    border-image: linear-gradient(90deg, #E84A9F, #B69CFF) 1 !important;
-    outline: none !important;
-}
-
-
-        /* =========================================================
-           CHAT INPUT COLORS
-           ========================================================= */
-        div[data-testid="stChatInput"]{
-          background: linear-gradient(135deg, rgba(255,255,255,0.75), rgba(217,203,255,0.45)) !important;
-          border-radius: 22px !important;
-          padding: 14px 16px !important;
-          border: 1px solid rgba(182,156,255,0.35) !important;
-          backdrop-filter: blur(10px);
-        } /* [web:500] */
-
-        div[data-testid="stChatInput"] textarea,
-        div[data-testid="stChatInput"] input{
-          background: rgba(255,255,255,0.92) !important;
-          color: var(--ws-text) !important;
-          border: 1px solid rgba(232,74,159,0.22) !important;
-          border-radius: 16px !important;
-          padding: 14px 14px !important;
-        } /* [web:501] */
-
-        div[data-testid="stChatInput"] textarea::placeholder,
-        div[data-testid="stChatInput"] input::placeholder{
-          color: rgba(45,27,71,0.45) !important;
-        } /* [web:501] */
-
-        div[data-testid="stChatInput"] button{
-          background: linear-gradient(90deg, #B69CFF, #FF4FA7) !important;
-          color: white !important;
-          border-radius: 22px !important;
-          border: none !important;
-          box-shadow: 0 10px 22px rgba(45, 27, 71, 0.16) !important;
-          transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
-        } /* [web:500] */
-
-        div[data-testid="stChatInput"] button:hover{
-          transform: translateY(-1px);
-          filter: brightness(1.06);
-        } /* [web:500] */
+        
         </style>
         """,
         unsafe_allow_html=True

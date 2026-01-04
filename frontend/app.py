@@ -173,10 +173,17 @@ if not st.session_state.logged_in:
 
 # ---------------- LOGGED IN UI ----------------
 else:
+    # Ensure query params are set for persistence
+    _set_qp(logged_in="1", user=st.session_state.username)
+    if st.session_state.selected_history:
+        _set_qp(history=str(st.session_state.selected_history))
+
     with st.sidebar:
         st.markdown(f"## Hi, {st.session_state.username}")
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
+            st.session_state.selected_history = None
+            st.query_params.pop("history", None)
             st.rerun()
 
         st.markdown("### Chat History")
@@ -218,7 +225,7 @@ else:
             if st.button("Clear chat", use_container_width=True):
                 st.session_state.messages = []
                 st.session_state.selected_history = None
-                _clear_qp()
+                st.query_params.pop("history", None)
                 st.rerun()
         with c2:
             if st.button("Emergency", use_container_width=True):
