@@ -223,12 +223,7 @@ else:
 
     with top_r:
         c1, c2 = st.columns(2)
-        with c1:
-            if st.button("Clear chat", use_container_width=True):
-                st.session_state.messages = []
-                st.session_state.selected_history = None
-                st.query_params.pop("history", None)
-                st.rerun()
+
         with c2:
             if st.button("Emergency", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})

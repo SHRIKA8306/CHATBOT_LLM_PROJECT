@@ -7,9 +7,7 @@ import os
 from dotenv import load_dotenv
 import traceback
 from groq import Groq
-
 load_dotenv()
-
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
