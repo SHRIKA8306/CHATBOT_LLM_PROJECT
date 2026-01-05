@@ -20,6 +20,7 @@ def apply_styles():
           --bottom-1: rgba(253, 228, 234, 0.96); /* blush */
           --bottom-2: rgba(230, 218, 248, 0.96); /* gold */
           --bottom-border: rgba(255,218,185,0.22); /* gold */
+          --chat-input-bg: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%); /* keep gradient to match page */
         }
 
         html, body, [data-testid="stAppViewContainer"], .stApp {
@@ -206,34 +207,69 @@ def apply_styles():
 
         /* =========================================================
            REMOVE BLACK STRIP BEHIND CHAT INPUT
-           (This is the key fix)
+           (Make the chat input full width across the page)
            ========================================================= */
-        /* Apply gradient border to the outer chat input box */
-div[data-testid="stChatInputContainer"] {
-  border: 2px solid transparent !important;
-  border-image: linear-gradient(90deg, var(--pastel-pink), var(--pastel-blue)) 1 !important;
-  border-radius: 22px !important;
-  background: var(--white) !important;
-  box-shadow: 0 2px 8px rgba(75, 63, 114, 0.07);
-  padding: 8px !important;
-  color: var(--ws-text) !important;
-}
-div[data-testid="stChatInputContainer"] input,
-div[data-testid="stChatInputContainer"] textarea {
-  color: black !important;
-  background: var(--white) !important;
-  caret-color: var(--ws-text) !important;
-}
+        /* Ensure the bottom block spans full width and uses box-sizing */
+        div[data-testid="stBottomBlockContainer"] {
+          width: 100% !important;
+          padding: 12px 24px !important;
+          box-sizing: border-box !important;
+          background: transparent !important;
+        }
 
-/* Also fix floating wrapper if Streamlit uses it */
-/* Make bottom chat bar same as top gradient header */
-.stChatFloatingInputContainer,
-div[data-testid="stChatInputContainer"],
-div[data-testid="stBottomBlockContainer"] {
-  background: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
-  border: none !important;
-  box-shadow: none !important;
-}
+        /* Make the floating input container and bottom block full width and padded */
+        .stChatFloatingInputContainer,
+        div[data-testid="stChatInputContainer"],
+        div[data-testid="stBottomBlockContainer"] {
+          /* Use a single solid color behind the chat input across the page */
+          background: var(--chat-input-bg) !important;
+          border: none !important;
+          box-shadow: none !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 12px 24px !important;
+          box-sizing: border-box !important;
+          border-radius: 0 !important; /* match full-width strip look */
+        }
+
+        /* Apply minimal wrapper to the input so the strip behind remains a single color */
+        div[data-testid="stChatInputContainer"] {
+          border: none !important; /* keep wrapper clean */
+          border-radius: 0 !important; /* no rounded box so it blends */
+          background: transparent !important; /* transparent so the strip shows */
+          box-shadow: none !important;
+          padding: 0 24px !important; /* align with strip padding */
+          color: var(--ws-text) !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 auto !important;
+          box-sizing: border-box !important;
+        }
+
+        /* Make the text input blend with the strip and occupy full width */
+        div[data-testid="stChatInputContainer"] input,
+        div[data-testid="stChatInputContainer"] textarea {
+          color: var(--ws-text) !important;
+          background: transparent !important; /* show the strip color behind */
+          caret-color: var(--ws-text) !important;
+          width: 100% !important;
+          padding: 18px 12px !important; /* comfortable vertical padding */
+          border-radius: 0 !important; /* flat edges to match strip */
+          border: none !important;
+          box-shadow: none !important;
+          font-size: 16px !important;
+        }
+
+        /* Style the submit/send button so it's visible on the strip */
+        div[data-testid="stChatInputContainer"] button {
+          background: transparent !important;
+          border: none !important;
+          color: var(--ws-text) !important;
+          font-weight: 700 !important;
+        }
+
+        /* Also ensure the bottom floating wrapper keeps full width */
+        .stChatFloatingInputContainer { width: 100% !important; padding: 8px 24px !important; box-sizing: border-box !important; }
         
         </style>
         """,
