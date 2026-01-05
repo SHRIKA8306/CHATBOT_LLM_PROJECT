@@ -173,12 +173,17 @@ if not st.session_state.logged_in:
 
 # ---------------- LOGGED IN UI ----------------
 else:
-    with st.sidebar:
-        st.markdown(f"## Hi, {st.session_state.username}")
-        st.markdown("---")
+    # Ensure query params are set for persistence
+    _set_qp(logged_in="1", user=st.session_state.username)
+    if st.session_state.selected_history:
+        _set_qp(history=str(st.session_state.selected_history))
 
+    with st.sidebar:
+        st.markdown(f"<h2 style='font-weight:600; font-size:30px'>Hi {st.session_state.username}</h2>", unsafe_allow_html=True)
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
+            st.session_state.selected_history = None
+            st.query_params.pop("history", None)
             st.rerun()
 
         st.markdown("### Chat History")
@@ -204,13 +209,10 @@ else:
                             st.rerun()
         except Exception:
             pass
-
-        st.markdown('<div class="ws-sidebar-footer">', unsafe_allow_html=True)
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
     top_l, top_r = st.columns([4, 2], vertical_alignment="center")
     with top_l:
@@ -223,7 +225,7 @@ else:
             if st.button("Clear chat", use_container_width=True):
                 st.session_state.messages = []
                 st.session_state.selected_history = None
-                _clear_qp()
+                st.query_params.pop("history", None)
                 st.rerun()
         with c2:
             if st.button("Emergency", use_container_width=True):
@@ -231,8 +233,6 @@ else:
                 reply = api_chat("Give me all women's safety helpline numbers in India")
                 st.session_state.messages.append({"role": "assistant", "content": reply})
                 st.rerun()
-
-    st.markdown("---")
 
     body_l, body_r = st.columns([3, 1], gap="large")
     with body_l:
