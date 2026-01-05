@@ -48,7 +48,7 @@ def render_chat_from_history():
     for chat in st.session_state.messages:
         role = "user" if chat["role"] == "user" else "assistant"
         avatar = "🧑" if role == "user" else "🛡️"
-        with st.chat_message(role, avatar=avatar, width="content"):
+        with st.chat_message(role, avatar=avatar):
             st.markdown(chat["content"])
 
 def api_chat(prompt: str) -> str:
@@ -58,14 +58,19 @@ def api_chat(prompt: str) -> str:
     return "Server error. Please try again."
 
 def load_history_chat(history_id: str, history_list: list):
+    # Flatten the entire history for the user into a single messages list
+    msgs = []
     for chat in history_list:
-        if str(chat.get("id")) == str(history_id):
-            st.session_state.messages = [
-                {"role": "user", "content": chat.get("user_message", "")},
-                {"role": "assistant", "content": chat.get("bot_reply", "")},
-            ]
-            st.session_state.selected_history = chat.get("id")
-            return
+        msgs.append({"role": "user", "content": chat.get("user_message", "")})
+        msgs.append({"role": "assistant", "content": chat.get("bot_reply", "")})
+    st.session_state.messages = msgs
+    # Keep the selected history id if provided, otherwise set to last item
+    if history_id:
+        st.session_state.selected_history = history_id
+    elif history_list:
+        st.session_state.selected_history = history_list[-1].get("id")
+    else:
+        st.session_state.selected_history = None
 
 # ---------------- LOGIN / REGISTER ----------------
 if not st.session_state.logged_in:
@@ -201,14 +206,11 @@ else:
                 with st.container(height=450):
                     for chat in history:
                         preview = (chat.get("user_message", "").split("\n")[0])[:70]
-                        if st.button(preview, key=f"chat_{chat['id']}", use_container_width=True):
-                            st.session_state.selected_history = chat["id"]
-                            st.session_state.messages = [
-                                {"role": "user", "content": chat.get("user_message", "")},
-                                {"role": "assistant", "content": chat.get("bot_reply", "")},
-                            ]
-                            _set_qp(history=str(chat["id"]))
-                            st.rerun()
+                        # Use anchor links for cleaner styling and full-width list items
+                        active = str(chat.get("id")) == str(st.session_state.selected_history)
+                        href = f"?history={chat['id']}&logged_in=1&user={st.session_state.username}"
+                        cls = "chat-item active" if active else "chat-item"
+                        st.markdown(f'<a class="{cls}" href="{href}">{preview}</a>', unsafe_allow_html=True)
         except Exception:
             pass
         if st.button("Logout", use_container_width=True, key="logout_btn"):

@@ -109,6 +109,32 @@ def apply_styles():
           color: var(--ws-text) !important;
         }
 
+        /* Chat history list items (sidebar) - show as full-width compact list like ChatGPT */
+        [data-testid="stSidebar"] .chat-item{
+          display:block;
+          width:100%;
+          padding:6px 8px; /* tighter vertical padding */
+          border-radius:8px;
+          background: transparent;
+          color: var(--ws-text) !important;
+          text-decoration: none;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          border-left: 3px solid transparent;
+          margin: 4px 0; /* reduce gap between items */
+          font-size: 16px; /* slightly larger for readability */
+          line-height: 1.2;
+        }
+        [data-testid="stSidebar"] .chat-item:hover{
+          background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+        }
+        [data-testid="stSidebar"] .chat-item.active{
+          background: linear-gradient(90deg, rgba(230,218,248,0.95), rgba(214,234,248,0.95));
+          border-left-color: rgba(75,63,114,0.8);
+          font-weight:700;
+        }
+
         .ws-sidebar-footer{
           position: sticky;
           bottom: 0;
