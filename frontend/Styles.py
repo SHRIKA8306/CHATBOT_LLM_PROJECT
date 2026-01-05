@@ -18,7 +18,7 @@ def apply_styles():
 
           /* Bottom/chat theme */
           --bottom-1: rgba(253, 228, 234, 0.96); /* blush */
-          --bottom-2: rgba(230, 218, 248, 0.96); /* lavender */
+          --bottom-2: rgba(230, 218, 248, 0.96); /* gold */
           --bottom-border: rgba(255,218,185,0.22); /* gold */
         }
 
@@ -84,6 +84,7 @@ def apply_styles():
         }
         [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4, [data-testid="stSidebar"] h5, [data-testid="stSidebar"] h6 {
           margin: 0 !important;
+          padding: 0 !important;
         }
         [data-testid="stSidebar"] .stContainer {
           padding: 0 !important;
@@ -91,15 +92,30 @@ def apply_styles():
         }
         [data-testid="stSidebar"] .stMarkdown {
           margin: 0 !important;
+          padding: 0 !important;
         }
-        [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"]{
-          background: rgba(255,255,255,0.28) !important;
-          border: 1px solid rgba(182,156,255,0.18) !important;
-          border-radius: 16px !important;
-          padding: 0px !important;
-          padding-bottom: 0px !important;
+        [data-testid="stSidebar"] .stVerticalBlockBorderWrapper {
+          padding: 0 !important;
           margin: 0 !important;
-          box-shadow: 0 10px 22px rgba(45, 27, 71, 0.08) !important;
+        }
+
+        /* Additional rules to remove top and bottom space in sidebar */
+        [data-testid="stSidebar"] > div {
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+          margin-top: 0 !important;
+          margin-bottom: 0 !important;
+        }
+        [data-testid="stSidebar"] > div > div {
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+          margin-top: 0 !important;
+          margin-bottom: 0 !important;
+        }
+        /* Force no top space on the first child of sidebar */
+        [data-testid="stSidebar"] > div:first-child {
+          padding-top: 0 !important;
+          margin-top: 0 !important;
         }
 
         [data-testid="stSidebar"] .stButton > button{
