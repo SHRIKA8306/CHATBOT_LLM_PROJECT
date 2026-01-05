@@ -5,7 +5,7 @@ def apply_styles():
         """
         <style>
         :root{
-          --ws-text: #4B3F72; /* Elegant deep lavender for text */
+          --ws-text: #000000; /* Black color for text */
           --ws-muted: rgba(75, 63, 114, 0.55);
 
           --pastel-pink: #F8E1F4;
@@ -74,6 +74,7 @@ def apply_styles():
           background: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
           padding-top: 0 !important;
           padding-bottom: 0 !important;
+          margin: 0 !important;
         }
           [data-testid="stSidebar"] *{
           background: transparent !important;
@@ -81,12 +82,23 @@ def apply_styles():
           border: none !important;
           box-shadow: none !important;
         }
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4, [data-testid="stSidebar"] h5, [data-testid="stSidebar"] h6 {
+          margin: 0 !important;
+        }
+        [data-testid="stSidebar"] .stContainer {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        [data-testid="stSidebar"] .stMarkdown {
+          margin: 0 !important;
+        }
         [data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"]{
           background: rgba(255,255,255,0.28) !important;
           border: 1px solid rgba(182,156,255,0.18) !important;
           border-radius: 16px !important;
           padding: 0px !important;
           padding-bottom: 0px !important;
+          margin: 0 !important;
           box-shadow: 0 10px 22px rgba(45, 27, 71, 0.08) !important;
         }
 
@@ -101,6 +113,7 @@ def apply_styles():
           color: var(--ws-text) !important;
           font-size: 15px !important;
           height: auto !important;
+          margin: 0 !important;
           box-shadow: 0 2px 8px rgba(75, 63, 114, 0.07);
           transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, background 140ms ease;
         }
@@ -217,7 +230,7 @@ div[data-testid="stChatInputContainer"] {
 }
 div[data-testid="stChatInputContainer"] input,
 div[data-testid="stChatInputContainer"] textarea {
-  color: var(--ws-text) !important;
+  color: black !important;
   background: var(--white) !important;
   caret-color: var(--ws-text) !important;
 }
