@@ -194,7 +194,9 @@ else:
                 history = response.json().get("chat_history", [])
 
                 if params.get("history"):
-                    load_history_chat(params.get("history"), history)
+                    load_history_chat(str(params.get("history")), history)
+                else:
+                    load_history_chat("", history)
 
                 with st.container(height=450):
                     for chat in history:
