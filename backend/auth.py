@@ -3,6 +3,10 @@ import hashlib
 import re
 import os
 from dotenv import load_dotenv
+import requests
+import secrets
+import google.auth.transport.requests
+from google.oauth2 import id_token
 
 load_dotenv()
 
@@ -82,3 +86,49 @@ def reset_password(username, new_password):
     cursor.close()
     conn.close()
     return True, "Password reset successfully"
+def google_login():
+    """Returns Google OAuth URL - EXACT MATCH for Google Console"""
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    state = secrets.token_urlsafe(16)
+    auth_url = f"https://accounts.google.com/o/oauth2/auth?client_id={client_id}&redirect_uri=http://127.0.0.1:8000/auth/callback&scope=openid%20email%20profile&response_type=code&state={state}"
+    return auth_url
+
+def google_callback(code):
+    """Exchange Google code for user info - FIXED"""
+    client_id = os.getenv("GOOGLE_CLIENT_ID")
+    client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+    
+    token_data = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": "http://127.0.0.1:8000/auth/callback",  # ← EXACT SAME
+        "grant_type": "authorization_code",
+        "code": code
+    }
+    
+    token_response = requests.post("https://oauth2.googleapis.com/token", data=token_data).json()
+    id_token_str = token_response["id_token"]
+    
+    user_info = id_token.verify_oauth2_token(id_token_str, google.auth.transport.requests.Request(), client_id)
+    return {
+        "email": user_info["email"],
+        "name": user_info["name"],
+        "google_id": user_info["sub"]
+    }
+
+def save_google_user(user_info):
+    """Save/update Google user in DB"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Upsert Google user (email as username for consistency)
+        cursor.execute("""
+            INSERT INTO users (username, email, password_hash) 
+            VALUES (%s, %s, %s) 
+            ON DUPLICATE KEY UPDATE username=%s
+        """, (user_info["email"], user_info["email"], "google_auth", user_info["email"]))
+        conn.commit()
+        return True
+    finally:
+        cursor.close()
+        conn.close()

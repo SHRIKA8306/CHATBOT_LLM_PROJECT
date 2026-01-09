@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from auth import register_user, authenticate_user, reset_password
 import mysql.connector
@@ -7,6 +7,10 @@ import os
 from dotenv import load_dotenv
 import traceback
 from groq import Groq
+import requests
+from auth import google_login, google_callback, save_google_user
+
+
 load_dotenv()
 app = FastAPI()
 app.add_middleware(
@@ -163,7 +167,30 @@ async def get_chat_history(username: str):
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": "Server error"})
 
+@app.get("/auth/google")
+async def auth_google():
+    """Redirect to Google OAuth"""
+    return {"auth_url": google_login()}
 
+@app.get("/auth/callback")
+async def auth_google_callback(code: str):
+    """Google OAuth callback - saves user and redirects"""
+    try:
+        user_info = google_callback(code)
+        success = save_google_user(user_info)
+        if success:
+            # Redirect to Streamlit with user info
+            username = user_info["email"]
+            redirect_url = f"http://127.0.0.1:8501/?google_login=1&user={username}"
+            return RedirectResponse(redirect_url)
+        return JSONResponse(status_code=500, content={"error": "Failed to save user"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.get("/verify-google-login")
+async def verify_google_login(user: str):
+    """Verify Google login success"""
+    return {"message": "Login successful", "user": user, "logged_in": True}
 
 if __name__=="__main__":
     import uvicorn

@@ -19,10 +19,19 @@ st.session_state.setdefault("username", "")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
-# Track which chat history item is currently selected (keeps sidebar static)
 st.session_state.setdefault("selected_history", None)
 
 apply_styles()
+
+# ---------------- GOOGLE LOGIN CHECK (NEW - FIXED) ----------------
+if st.query_params.get("google_login") == "1":
+    google_user = st.query_params.get("user")
+    if google_user:
+        st.session_state.logged_in = True
+        st.session_state.username = google_user
+        st.query_params.clear()
+        st.success(f"✅ Google login successful! Welcome {google_user.split('@')[0]}!")
+        st.rerun()
 
 # ---------------- QUERY PARAMS ----------------
 def _get_qp():
@@ -34,7 +43,7 @@ def _set_qp(**kwargs):
 def _clear_qp():
     st.query_params.clear()
 
-# Restore login from query params
+# Restore login from query params (BOTH username/password + Google)
 params = _get_qp()
 if params.get("logged_in") == "1" and params.get("user"):
     st.session_state.logged_in = True
@@ -72,11 +81,8 @@ if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # -------- HEADER (IMAGE + TITLE SAME LINE) --------
-        img_base64 = base64.b64encode(
-            open("logo.png", "rb").read()
-        ).decode()
-
+        # -------- HEADER --------
+        img_base64 = base64.b64encode(open("logo.png", "rb").read()).decode()
         st.markdown(
             f"""
             <div style="
@@ -97,6 +103,22 @@ if not st.session_state.logged_in:
             """,
             unsafe_allow_html=True
         )
+
+        # -------- GOOGLE LOGIN BUTTON (NEW - FIXED) --------
+        if st.button("🔐 Login with Google", use_container_width=True, type="primary"):
+            try:
+                res = requests.get(f"{API_BASE_URL}/auth/google")
+                if res.status_code == 200:
+                    auth_url = res.json()["auth_url"]
+                    st.markdown(f'[👆 Click here to continue Google login]({auth_url})')
+                    st.info("✅ Open the link above in a new tab, login, then return here!")
+                else:
+                    st.error("Backend error - check if backend is running on port 8000")
+            except:
+                st.error("Backend not running. Start with: `uvicorn backend:app --host 127.0.0.1 --port 8000`")
+
+        st.markdown("---")
+        st.caption("OR use username/password:")
 
         # -------- LOGIN --------
         if st.session_state.auth_mode == "login":
@@ -145,6 +167,7 @@ if not st.session_state.logged_in:
                     else:
                         st.error("Reset failed")
 
+        # -------- REGISTER --------
         else:
             st.subheader("Register")
             reg_username = st.text_input("Username", key="reg_username")
@@ -211,6 +234,7 @@ else:
                             st.rerun()
         except Exception:
             pass
+        
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
