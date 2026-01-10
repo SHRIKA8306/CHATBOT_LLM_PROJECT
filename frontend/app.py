@@ -188,7 +188,7 @@ if not st.session_state.logged_in:
                     res = requests.get(f"{API_BASE_URL}/auth/google")
                     if res.status_code == 200:
                         auth_url = res.json()["auth_url"]
-                        st.markdown(f'<div style="text-align: center;"><a href="{auth_url}" target="_blank" style="text-decoration:none;"><button style="background-color: linear-gradient(45deg, #667EEA, #764BA2);color:white;border:none;padding:4px 4px;border-radius:10px;font-size:15px;"> 🅖 login</button></a></div>', unsafe_allow_html=True)
+                        st.markdown(f'<div style="text-align: center;"><a href="{auth_url}" target="_blank" style="text-decoration:none;"><button style="background-color: linear-gradient(45deg, #667EEA, #764BA2);color:white;border:none;padding:2px 2px;border-radius:15px;font-size:20px;"> 🅖 </button></a></div>', unsafe_allow_html=True)
                     else:
                         st.error("Backend error - check if backend is running on port 8000")
                 except:
