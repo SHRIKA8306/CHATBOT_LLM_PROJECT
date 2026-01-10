@@ -21,6 +21,8 @@ st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
 st.session_state.setdefault("selected_history", None)
+st.session_state.setdefault("editing", None)
+st.session_state.setdefault("edit_text", "")
 
 apply_styles()
 
@@ -92,11 +94,47 @@ if _qp_first("history"):
 
 # ---------------- HELPERS ----------------
 def render_chat_from_history():
-    for chat in st.session_state.messages:
+    for i, chat in enumerate(st.session_state.messages):
         role = "user" if chat["role"] == "user" else "assistant"
         avatar = "🧑" if role == "user" else "🛡️"
         with st.chat_message(role, avatar=avatar, width="content"):
-            st.markdown(chat["content"])
+            # If this message is being edited, show inline textarea + Save/Cancel
+            if role == "user" and st.session_state.get("editing") == i:
+                edited = st.text_area("", value=st.session_state.edit_text or chat.get("content", ""), key=f"inline_edit_{i}", height=120)
+                col_s, col_c = st.columns([1, 1])
+                with col_s:
+                    # expand button to column width so both buttons appear on same row
+                    if st.button("Save", key=f"save_inline_{i}", use_container_width=True):
+                        # update the user's message
+                        st.session_state.messages[i]["content"] = edited
+                        st.session_state.editing = None
+                        st.session_state.edit_text = ""
+                        # call backend and update/insert assistant reply immediately
+                        try:
+                            reply = api_chat(edited)
+                        except Exception:
+                            reply = "Server error. Please try again."
+                        if i + 1 < len(st.session_state.messages) and st.session_state.messages[i + 1].get("role") == "assistant":
+                            st.session_state.messages[i + 1]["content"] = reply
+                        else:
+                            st.session_state.messages.insert(i + 1, {"role": "assistant", "content": reply})
+                        st.rerun()
+                with col_c:
+                    if st.button("Cancel", key=f"cancel_inline_{i}", use_container_width=True):
+                        st.session_state.editing = None
+                        st.session_state.edit_text = ""
+                        st.rerun()
+            else:
+                st.markdown(chat.get("content", ""))
+                # Provide centered, smaller edit icon only for user messages
+                if role == "user":
+                    c0, c1, c2 = st.columns([1, 6, 1])
+                    with c1:
+                        # use a smaller glyph for compact look
+                        if st.button("✎", key=f"edit_{i}"):
+                            st.session_state.editing = i
+                            st.session_state.edit_text = chat.get("content", "")
+                            st.rerun()
 
 def api_chat(prompt: str) -> str:
     res = requests.post(API_URL, json={"message": prompt, "user": st.session_state.username})
@@ -309,6 +347,8 @@ else:
         render_chat_from_history()
     with body_r:
         show_right_sidebar()
+
+    # (Inline editing is handled inside render_chat_from_history)
 
     user_input = st.chat_input("Ask about laws, safety, or emergencies...")
 
