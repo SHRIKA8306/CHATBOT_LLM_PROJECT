@@ -16,6 +16,7 @@ API_URL = f"{API_BASE_URL}/chat"
 # ---------------- SESSION STATE ----------------
 st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("username", "")
+st.session_state.setdefault("display_name", "")
 st.session_state.setdefault("messages", [])
 st.session_state.setdefault("auth_mode", "login")
 st.session_state.setdefault("forgot_mode", False)
@@ -24,16 +25,27 @@ st.session_state.setdefault("selected_history", None)
 apply_styles()
 
 # ---------------- GOOGLE LOGIN CHECK (NEW - FIXED) ----------------
-if st.query_params.get("google_login") == "1":
-    google_user = st.query_params.get("user")
-    if google_user:
-        st.session_state.logged_in = True
-        st.session_state.username = google_user
-        st.query_params.clear()
-        st.success(f"✅ Google login successful! Welcome {google_user.split('@')[0]}!")
-        st.rerun()
-
-# ---------------- QUERY PARAMS ----------------
+def _format_display_name(raw: str) -> str:
+    if not raw:
+        return ""
+    # If an email was provided, use the local part
+    if "@" in raw:
+        raw = raw.split("@")[0]
+    # If name contains spaces (e.g., 'Suja Khatri'), take first name and last initial
+    parts = raw.split()
+    if len(parts) >= 2:
+        first = parts[0]
+        last_initial = parts[-1][0]
+        return f"{first.lower()} {last_initial.lower()}"
+    # If local part uses separators like '.' or '_', split and use first and last initial
+    for sep in (".", "_"):
+        if sep in raw:
+            parts = raw.split(sep)
+            if len(parts) >= 2:
+                return f"{parts[0].lower()} {parts[-1][0].lower()}"
+    # Otherwise return the single token lowercased
+    return raw.lower()
+# Query-param helpers (define before use)
 def _get_qp():
     return st.query_params
 
@@ -43,14 +55,40 @@ def _set_qp(**kwargs):
 def _clear_qp():
     st.query_params.clear()
 
+
+def _qp_first(key: str):
+    """Return the first value for a query-param key (Streamlit may store lists)."""
+    v = st.query_params.get(key)
+    if isinstance(v, list) and v:
+        return v[0]
+    return v
+
+
+if _qp_first("google_login") == "1":
+    google_user = _qp_first("user")
+    google_name = _qp_first("name")
+    if google_user:
+        st.session_state.logged_in = True
+        # keep username as email for backend/chat storage
+        st.session_state.username = google_user
+        # store a friendly display name for UI
+        st.session_state.display_name = _format_display_name(google_name or google_user)
+        _clear_qp()
+        st.success(f"✅ Google login successful! Welcome {st.session_state.display_name}!")
+        st.rerun()
+
+# ---------------- QUERY PARAMS ----------------
+
 # Restore login from query params (BOTH username/password + Google)
 params = _get_qp()
-if params.get("logged_in") == "1" and params.get("user"):
+if _qp_first("logged_in") == "1" and _qp_first("user"):
     st.session_state.logged_in = True
-    st.session_state.username = params.get("user")
+    st.session_state.username = _qp_first("user")
+    # restore display name if provided or derive from username
+    st.session_state.display_name = _format_display_name(_qp_first("name") or _qp_first("user"))
 
-if params.get("history"):
-    st.session_state.selected_history = params.get("history")
+if _qp_first("history"):
+    st.session_state.selected_history = _qp_first("history")
 
 # ---------------- HELPERS ----------------
 def render_chat_from_history():
@@ -138,10 +176,19 @@ if not st.session_state.logged_in:
                         }
                     )
                     if res.status_code == 200:
+                        data = res.json()
+                        email = data.get("email") or login_username
                         st.session_state.logged_in = True
-                        st.session_state.username = login_username
+                        # Use email as canonical username so chat history is shared
+                        st.session_state.username = email
+                        # Show the literal username entered when logging in via username/password
+                        # If the user entered a username (not an email), prefer that for display.
+                        if login_username and "@" not in login_username:
+                            st.session_state.display_name = login_username
+                        else:
+                            st.session_state.display_name = _format_display_name(email)
                         st.session_state.selected_history = None
-                        _set_qp(logged_in="1", user=login_username)
+                        _set_qp(logged_in="1", user=email, name=st.session_state.display_name)
                         st.rerun()
                     else:
                         st.error("Invalid login details")
@@ -197,12 +244,13 @@ if not st.session_state.logged_in:
 # ---------------- LOGGED IN UI ----------------
 else:
     # Ensure query params are set for persistence
-    _set_qp(logged_in="1", user=st.session_state.username)
+    _set_qp(logged_in="1", user=st.session_state.username, name=st.session_state.display_name)
     if st.session_state.selected_history:
         _set_qp(history=str(st.session_state.selected_history))
 
     with st.sidebar:
-        st.markdown(f"<h2 style='font-weight:600; font-size:30px'>Hi {st.session_state.username}</h2>", unsafe_allow_html=True)
+        display = st.session_state.display_name or _format_display_name(st.session_state.username)
+        st.markdown(f"<h2 style='font-weight:600; font-size:30px'>Hi {display}</h2>", unsafe_allow_html=True)
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
@@ -216,8 +264,9 @@ else:
             if response.status_code == 200:
                 history = response.json().get("chat_history", [])
 
-                if params.get("history"):
-                    load_history_chat(str(params.get("history")), history)
+                hist = _qp_first("history")
+                if hist:
+                    load_history_chat(str(hist), history)
                 else:
                     load_history_chat("", history)
 

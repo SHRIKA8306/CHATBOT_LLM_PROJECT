@@ -9,6 +9,7 @@ import traceback
 from groq import Groq
 import requests
 from auth import google_login, google_callback, save_google_user
+import urllib.parse
 
 
 load_dotenv()
@@ -181,7 +182,9 @@ async def auth_google_callback(code: str):
         if success:
             # Redirect to Streamlit with user info
             username = user_info["email"]
-            redirect_url = f"http://127.0.0.1:8501/?google_login=1&user={username}"
+            # Include the display name separately so frontend can show a friendly name
+            display_name = user_info.get("name", "")
+            redirect_url = f"http://127.0.0.1:8501/?google_login=1&user={urllib.parse.quote(username)}&name={urllib.parse.quote(display_name)}"
             return RedirectResponse(redirect_url)
         return JSONResponse(status_code=500, content={"error": "Failed to save user"})
     except Exception as e:

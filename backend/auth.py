@@ -57,9 +57,10 @@ def register_user(username, email, password):
 def authenticate_user(username, password):
     conn = get_connection()
     cursor = conn.cursor()
+    # Allow login using either username or email so both auth flows map to same account
     cursor.execute(
-        "SELECT id,email FROM users WHERE username=%s AND password_hash=%s",
-        (username, hash_password(password))
+        "SELECT id,email FROM users WHERE (username=%s OR email=%s) AND password_hash=%s",
+        (username, username, hash_password(password))
     )
     user = cursor.fetchone()
     cursor.close()
