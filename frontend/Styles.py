@@ -194,6 +194,66 @@ def apply_styles():
           border: 1px solid var(--border-soft) !important;
           backdrop-filter: blur(10px);
         }
+
+        /* Buttons inside chat bubbles should be compact and not wrap text */
+        [data-testid="stChatMessage"] .stButton > button {
+          padding: 10px 20px !important;
+          font-size: 15px !important;
+          height: auto !important;
+          min-height: 44px !important;
+          border-radius: 24px !important;
+          white-space: nowrap !important;
+        }
+
+        /* Target the small edit icon (single glyph) and make it look like an icon, not a pill/button */
+        [data-testid="stChatMessage"] .stButton > button[aria-label="✎"] {
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 6px 8px !important;
+          min-height: 0 !important;
+          height: auto !important;
+          border-radius: 6px !important;
+          font-size: 18px !important;
+        }
+
+        /* Ensure Save/Cancel remain roomy and don't wrap their text */
+        [data-testid="stChatMessage"] .stButton > button[aria-label="Save"],
+        [data-testid="stChatMessage"] .stButton > button[aria-label="Cancel"] {
+          padding: 10px 28px !important;
+          font-size: 16px !important;
+          white-space: nowrap !important;
+          min-height: 44px !important;
+        }
+
+        /* Make inline textarea inside chat bubble fill the available width */
+        [data-testid="stChatMessage"] > div { position: relative !important; }
+
+        /* Make inline textarea inside chat bubble fill the available width and match bubble padding */
+        [data-testid="stChatMessage"] textarea {
+          display: block !important;
+          width: calc(100% - 36px) !important;
+          max-width: calc(100% - 36px) !important;
+          min-height: 160px !important;
+          box-sizing: border-box !important;
+          border-radius: 12px !important;
+          padding: 16px !important;
+          font-size: 16px !important;
+          background: rgba(255,255,255,0.95) !important;
+          border: 1px solid rgba(75,63,114,0.08) !important;
+          outline: none !important;
+          resize: vertical !important;
+          margin: 0 18px !important;
+        }
+
+        /* Ensure the Streamlit textarea wrapper occupies full width inside the chat bubble */
+        [data-testid="stChatMessage"] .stTextArea,
+        [data-testid="stChatMessage"] .stTextArea > div,
+        [data-testid="stChatMessage"] .stTextArea > div > div {
+          width: 100% !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          box-sizing: border-box !important;
+        }
         [data-testid="stChatMessage"][data-st-chat-message="user"] > div{
           background: rgba(255, 255, 255, 0.95) !important;
           margin-left: auto !important;
