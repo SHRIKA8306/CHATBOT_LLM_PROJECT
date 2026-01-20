@@ -1,3 +1,7 @@
+"""
+RAG Service for Women's Safety Chatbot
+Handles vector search and context retrieval from Pinecone
+"""
 import json
 import os
 from pinecone import Pinecone, ServerlessSpec
@@ -235,3 +239,17 @@ Your Response:"""
 if __name__ == "__main__":
     # Uncomment to upload data to Pinecone (run once)
     #setup_rag()
+    
+    # Test retrieval
+    test_query = "What helplines are available in Kerala for domestic violence?"
+    contexts = retrieve_context(test_query, top_k=3)
+    
+    print("Query:", test_query)
+    print("\nRetrieved Contexts:")
+    for i, ctx in enumerate(contexts, 1):
+        print(f"\n{i}. Score: {ctx['score']:.3f}")
+        print(f"   {ctx['text'][:200]}...")
+    
+    print("\n" + "="*50)
+    print("\nEnhanced Prompt:")
+    print(build_rag_prompt(test_query, contexts))
