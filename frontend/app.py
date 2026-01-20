@@ -181,18 +181,17 @@ if not st.session_state.logged_in:
         )
 
         # -------- GOOGLE LOGIN BUTTON (NEW - FIXED) --------
-        col_g1, col_g2, col_g3 = st.columns([1, 1, 1])
-        with col_g2:
-            if st.button("Login with Google", use_container_width=True, type="primary"):
-                try:
-                    res = requests.get(f"{API_BASE_URL}/auth/google")
-                    if res.status_code == 200:
-                        auth_url = res.json()["auth_url"]
-                        st.markdown(f'<div style="text-align: center;"><a href="{auth_url}" target="_blank" style="text-decoration:none;"><button style="background-color: linear-gradient(45deg, #667EEA, #764BA2);color:white;border:none;padding:2px 2px;border-radius:15px;font-size:20px;"> 🅖 </button></a></div>', unsafe_allow_html=True)
-                    else:
-                        st.error("Backend error - check if backend is running on port 8000")
-                except:
-                    st.error("Backend not running. Start with: `uvicorn backend:app --host 127.0.0.1 --port 8000`")
+        if st.button("🔐 Login with Google", use_container_width=True, type="primary"):
+            try:
+                res = requests.get(f"{API_BASE_URL}/auth/google")
+                if res.status_code == 200:
+                    auth_url = res.json()["auth_url"]
+                    st.markdown(f'[Click here to continue Google login]({auth_url})')
+
+                else:
+                    st.error("Backend error - check if backend is running on port 8000")
+            except:
+                st.error("Backend not running. Start with: `uvicorn backend:app --host 127.0.0.1 --port 8000`")
 
         st.markdown("---")
         st.caption("OR use username/password:")

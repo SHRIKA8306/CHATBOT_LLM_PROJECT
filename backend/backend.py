@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from auth import register_user, authenticate_user, reset_password
+from auth import google_login, google_callback, save_google_user
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -11,6 +12,8 @@ import requests
 from auth import google_login, google_callback, save_google_user
 import urllib.parse
 
+# ========== NEW: Import RAG functions ==========
+from rag_service import retrieve_context, build_rag_prompt
 
 load_dotenv()
 app = FastAPI()
@@ -117,7 +120,7 @@ async def forgot_password(request: Request):
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error":"Server error"})
 
-# ----------------- CHAT -----------------
+# ----------------- CHAT WITH RAG -----------------
 @app.post("/chat")
 async def chat(request: Request):
     try:
@@ -133,27 +136,41 @@ async def chat(request: Request):
         chat_id = cursor.lastrowid
         conn.commit()
 
-        # LLM
-        prompt = f"""
-        You are a Women's Safety Assistant. ONLY answer questions related to women's safety in India.
-        Include: safety tips, Indian laws, emergency numbers, and helplines.
-        If unrelated, reply: Sorry, I can only answer questions about women's safety.
-
-        User Question: {user_msg}
-        """
+        # ========== NEW: RAG - Retrieve relevant context ==========
+        contexts = retrieve_context(user_msg, top_k=3)
+        
+        # Build enhanced prompt with context
+        prompt = build_rag_prompt(user_msg, contexts)
+        
+        # LLM call with RAG context
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role":"user","content":prompt}]
         )
         bot_reply = response.choices[0].message.content or ""
+        
         cursor.execute("UPDATE chat_history SET bot_reply=%s WHERE id=%s",(bot_reply,chat_id))
         conn.commit()
         cursor.close()
         conn.close()
-        return {"reply":bot_reply}
+        
+        # ========== NEW: Return context sources (optional) ==========
+        return {
+            "reply": bot_reply,
+            "sources": [
+                {
+                    "text": ctx["text"][:150] + "...",
+                    "type": ctx["metadata"].get("type"),
+                    "relevance": round(ctx["score"], 3)
+                }
+                for ctx in contexts
+            ]
+        }
     except Exception as e:
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error":"Server error"})
+
+# ----------------- CHAT HISTORY -----------------
 @app.get("/chat_history/{username}")
 async def get_chat_history(username: str):
     try:
@@ -168,6 +185,7 @@ async def get_chat_history(username: str):
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": "Server error"})
 
+# ----------------- GOOGLE AUTH -----------------
 @app.get("/auth/google")
 async def auth_google():
     """Redirect to Google OAuth"""
@@ -180,7 +198,6 @@ async def auth_google_callback(code: str):
         user_info = google_callback(code)
         success = save_google_user(user_info)
         if success:
-            # Redirect to Streamlit with user info
             username = user_info["email"]
             # Include the display name separately so frontend can show a friendly name
             display_name = user_info.get("name", "")
