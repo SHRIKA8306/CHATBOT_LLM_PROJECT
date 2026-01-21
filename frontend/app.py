@@ -98,37 +98,47 @@ def render_chat_from_history():
     for i, chat in enumerate(st.session_state.messages):
         role = "user" if chat["role"] == "user" else "assistant"
         avatar = "🧑" if role == "user" else "🛡️"
-        with st.chat_message(role, avatar=avatar, width="content"):
-            # If this message is being edited, show inline textarea + Save/Cancel
+
+        with st.chat_message(role, avatar=avatar):
+
+            # ---------- EDIT MODE ----------
             if role == "user" and st.session_state.get("editing") == i:
-                edited = st.text_area("Edit Message", value=st.session_state.edit_text or chat.get("content", ""), key=f"inline_edit_{i}", height=120, label_visibility="collapsed")
-                col_s, col_c = st.columns([1, 1])
-                with col_s:
-                    # expand button to column width so both buttons appear on same row
-                    if st.button("Save", key=f"save_inline_{i}", use_container_width=True):
-                        # Just update the user's message content locally (no API call, no new output)
+                edited = st.text_area(
+                    "",
+                    value=st.session_state.edit_text or chat.get("content", ""),
+                    key=f"inline_edit_{i}",
+                    height=100,
+                    label_visibility="collapsed"
+                )
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Save", key=f"save_{i}", use_container_width=True):
                         st.session_state.messages[i]["content"] = edited
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
-                        st.success("Message updated successfully!")  # Confirmation
                         st.rerun()
-                with col_c:
-                    if st.button("Cancel", key=f"cancel_inline_{i}", use_container_width=True):
+
+                with col2:
+                    if st.button("Cancel", key=f"cancel_{i}", use_container_width=True):
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
                         st.rerun()
+
+            # ---------- NORMAL MODE ----------
             else:
                 st.markdown(chat.get("content", ""))
-                # Provide right-aligned, smaller edit icon only for user messages
+
+                # Edit icon inside bubble (right aligned)
                 if role == "user":
-                    c0, c1, c2 = st.columns([6, 1, 1])  # Button on right (c2)
-                    with c2:
-                        # Smaller, right-aligned edit button
-                        if st.button("✎", key=f"edit_{i}", help="Edit this message"):
+                    edit_col = st.columns([8, 1])[1]
+                    with edit_col:
+                        if st.button("✎", key=f"edit_{i}", help="Edit message"):
                             st.session_state.editing = i
                             st.session_state.edit_text = chat.get("content", "")
                             st.rerun()
 
+          
 def api_chat(prompt: str) -> str:
     data = {"message": prompt, "user": st.session_state.username}
     if st.session_state.chat_id:
