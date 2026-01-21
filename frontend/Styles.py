@@ -205,16 +205,6 @@ def apply_styles():
           white-space: nowrap !important;
         }
 
-        /* Target the small edit icon (single glyph) and make it look like an icon, not a pill/button */
-        [data-testid="stChatMessage"] .stButton > button[aria-label="✎"] {
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 6px 8px !important;
-          min-height: 0 !important;
-          height: auto !important;
-          border-radius: 6px !important;
-          font-size: 18px !important;
-        }
 
         /* Ensure Save/Cancel remain roomy and don't wrap their text */
         [data-testid="stChatMessage"] .stButton > button[aria-label="Save"],
@@ -330,7 +320,75 @@ def apply_styles():
 
         /* Also ensure the bottom floating wrapper keeps full width */
         .stChatFloatingInputContainer { width: 100% !important; padding: 8px 24px !important; box-sizing: border-box !important; }
-        
+
+/* No hover / focus box */
+[data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:hover,
+[data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:focus,
+[data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:active {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+}
+/* ===== EDIT ICON (✎) — STREAMLIT KEY-BASED BUTTON FIX ===== */
+/* Target the edit button by its text content instead of aria-label */
+
+[data-testid="stChatMessage"] .stButton {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+
+/* Place edit icon inside chat bubble, top-right corner */
+[data-testid="stChatMessage"] > div {
+  position: relative !important; /* ensure bubble is relative for absolute positioning */
+}
+/* ================= SAVE & CANCEL — FINAL FIX ================= */
+
+/* Target Save & Cancel buttons INSIDE chat */
+[data-testid="stChatMessage"] .stButton > button {
+  background: linear-gradient(
+    135deg,
+    var(--pastel-pink),
+    var(--pastel-lav),
+    var(--pastel-blue)
+  ) !important;
+
+  color: var(--ws-text) !important;
+  font-weight: 700 !important;
+  padding: 10px 28px !important;
+  border-radius: 22px !important;
+  border: none !important;
+  box-shadow: 0 6px 16px rgba(75, 63, 114, 0.18) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+/* Hover effect */
+[data-testid="stChatMessage"] .stButton > button:hover {
+  transform: scale(1.06);
+  box-shadow: 0 10px 26px rgba(75, 63, 114, 0.28) !important;
+}
+[data-testid="stChatMessage"] > div {
+  position: relative !important;
+}
+
+/* ===== POSITION EDIT ICON AT BOTTOM-RIGHT INSIDE CHAT BUBBLE ===== */
+[data-testid="stChatMessage"] .stButton:has(button[aria-label="✎"]) {
+  position: absolute !important;
+  bottom: 12px !important;
+  right: 14px !important;
+  z-index: 3 !important;
+}
+
+
+
         </style>
         """,
         unsafe_allow_html=True

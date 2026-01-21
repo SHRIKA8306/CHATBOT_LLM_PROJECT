@@ -23,6 +23,7 @@ st.session_state.setdefault("forgot_mode", False)
 st.session_state.setdefault("selected_history", None)
 st.session_state.setdefault("editing", None)
 st.session_state.setdefault("edit_text", "")
+st.session_state.setdefault("chat_id", None)  # Track current chat thread ID for continuation
 
 apply_styles()
 
@@ -100,24 +101,16 @@ def render_chat_from_history():
         with st.chat_message(role, avatar=avatar, width="content"):
             # If this message is being edited, show inline textarea + Save/Cancel
             if role == "user" and st.session_state.get("editing") == i:
-                edited = st.text_area("", value=st.session_state.edit_text or chat.get("content", ""), key=f"inline_edit_{i}", height=120)
+                edited = st.text_area("Edit Message", value=st.session_state.edit_text or chat.get("content", ""), key=f"inline_edit_{i}", height=120, label_visibility="collapsed")
                 col_s, col_c = st.columns([1, 1])
                 with col_s:
                     # expand button to column width so both buttons appear on same row
                     if st.button("Save", key=f"save_inline_{i}", use_container_width=True):
-                        # update the user's message
+                        # Just update the user's message content locally (no API call, no new output)
                         st.session_state.messages[i]["content"] = edited
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
-                        # call backend and update/insert assistant reply immediately
-                        try:
-                            reply = api_chat(edited)
-                        except Exception:
-                            reply = "Server error. Please try again."
-                        if i + 1 < len(st.session_state.messages) and st.session_state.messages[i + 1].get("role") == "assistant":
-                            st.session_state.messages[i + 1]["content"] = reply
-                        else:
-                            st.session_state.messages.insert(i + 1, {"role": "assistant", "content": reply})
+                        st.success("Message updated successfully!")  # Confirmation
                         st.rerun()
                 with col_c:
                     if st.button("Cancel", key=f"cancel_inline_{i}", use_container_width=True):
@@ -126,30 +119,37 @@ def render_chat_from_history():
                         st.rerun()
             else:
                 st.markdown(chat.get("content", ""))
-                # Provide centered, smaller edit icon only for user messages
+                # Provide right-aligned, smaller edit icon only for user messages
                 if role == "user":
-                    c0, c1, c2 = st.columns([1, 6, 1])
-                    with c1:
-                        # use a smaller glyph for compact look
-                        if st.button("✎", key=f"edit_{i}"):
+                    c0, c1, c2 = st.columns([6, 1, 1])  # Button on right (c2)
+                    with c2:
+                        # Smaller, right-aligned edit button
+                        if st.button("✎", key=f"edit_{i}", help="Edit this message"):
                             st.session_state.editing = i
                             st.session_state.edit_text = chat.get("content", "")
                             st.rerun()
 
 def api_chat(prompt: str) -> str:
-    res = requests.post(API_URL, json={"message": prompt, "user": st.session_state.username})
+    data = {"message": prompt, "user": st.session_state.username}
+    if st.session_state.chat_id:
+        data["chat_id"] = st.session_state.chat_id  # Include chat_id if continuing a thread
+    res = requests.post(API_URL, json=data)
     if res.status_code == 200:
-        return res.json().get("reply", "")
+        response_data = res.json()
+        # Update chat_id if it's a new thread
+        if not st.session_state.chat_id:
+            st.session_state.chat_id = response_data.get("chat_id")
+        return response_data.get("reply", "")
     return "Server error. Please try again."
 
 def load_history_chat(history_id: str, history_list: list):
-    for chat in history_list:
-        if str(chat.get("id")) == str(history_id):
+    for thread in history_list:
+        if str(thread.get("id")) == str(history_id):
             st.session_state.messages = [
-                {"role": "user", "content": chat.get("user_message", "")},
-                {"role": "assistant", "content": chat.get("bot_reply", "")},
+                {"role": msg["role"], "content": msg["content"]} for msg in thread.get("messages", [])
             ]
-            st.session_state.selected_history = chat.get("id")
+            st.session_state.selected_history = thread.get("id")
+            st.session_state.chat_id = thread.get("id")  # Set chat_id for continuation
             return
 
 # ---------------- LOGIN / REGISTER ----------------
@@ -292,6 +292,7 @@ else:
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
+            st.session_state.chat_id = None  # Reset chat_id
             st.query_params.pop("history", None)
             st.rerun()
 
@@ -309,15 +310,16 @@ else:
                     load_history_chat("", history)
 
                 with st.container(height=450):
-                    for chat in history:
-                        preview = (chat.get("user_message", "").split("\n")[0])[:70]
-                        if st.button(preview, key=f"chat_{chat['id']}", use_container_width=True):
-                            st.session_state.selected_history = chat["id"]
+                    for thread in history:
+                        preview = thread.get("title", "Untitled Chat")
+                        if st.button(preview, key=f"chat_{thread['id']}", use_container_width=True):
+                            st.session_state.selected_history = thread["id"]
+                            st.session_state.chat_id = thread["id"]  # Set chat_id for continuation
+                            # Load all messages for this thread
                             st.session_state.messages = [
-                                {"role": "user", "content": chat.get("user_message", "")},
-                                {"role": "assistant", "content": chat.get("bot_reply", "")},
+                                {"role": msg["role"], "content": msg["content"]} for msg in thread.get("messages", [])
                             ]
-                            _set_qp(history=str(chat["id"]))
+                            _set_qp(history=str(thread["id"]))
                             st.rerun()
         except Exception:
             pass

@@ -56,6 +56,30 @@ def ensure_table_exists():
     try:
         conn = get_connection()
         cursor = conn.cursor()
+        
+        # Table for chat threads (conversations)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_threads (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user VARCHAR(255),
+                title VARCHAR(255),  # Preview of the first user message for display
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Table for individual messages within a thread
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                chat_id INT,
+                role ENUM('user', 'assistant'),
+                content TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (chat_id) REFERENCES chat_threads(id) ON DELETE CASCADE
+            )
+        """)
+        
+        # Keep the old table for migration (optional, or drop it after migrating data)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -65,20 +89,12 @@ def ensure_table_exists():
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(255) UNIQUE,
-                email VARCHAR(255) UNIQUE,
-                password_hash VARCHAR(255)
-            )
-        """)
+        
         conn.commit()
     except Exception as e:
         print(f"Table creation failed: {e}")
     finally:
         if conn and conn.is_connected():
-            cursor = conn.cursor()
             cursor.close()
             conn.close()
 
@@ -151,15 +167,22 @@ async def chat(request: Request):
         data = await request.json()
         user_msg = data.get("message", "")
         user = data.get("user", "anonymous")
+        chat_id = data.get("chat_id")  # New: Pass chat_id from frontend if continuing a thread
         
         if not user_msg:
             return JSONResponse(status_code=400, content={"error": "Message missing"})
 
-        # Database insert
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO chat_history (user, user_message) VALUES (%s, %s)", (user, user_msg))
-        chat_id = cursor.lastrowid
+
+        # If no chat_id, create a new thread
+        if not chat_id:
+            cursor.execute("INSERT INTO chat_threads (user, title) VALUES (%s, %s)", (user, user_msg[:50]))  # Title as first 50 chars
+            chat_id = cursor.lastrowid
+            conn.commit()
+
+        # Insert the user message into messages
+        cursor.execute("INSERT INTO messages (chat_id, role, content) VALUES (%s, %s, %s)", (chat_id, "user", user_msg))
         conn.commit()
 
         # RAG Pipeline with safety checks
@@ -186,8 +209,8 @@ async def chat(request: Request):
         
         bot_reply = response.choices[0].message.content or "Sorry, I couldn't generate a response."
 
-        # Update chat history
-        cursor.execute("UPDATE chat_history SET bot_reply = %s WHERE id = %s", (bot_reply, chat_id))
+        # Insert the assistant reply into messages
+        cursor.execute("INSERT INTO messages (chat_id, role, content) VALUES (%s, %s, %s)", (chat_id, "assistant", bot_reply))
         conn.commit()
 
         # Build safe sources response
@@ -228,13 +251,23 @@ async def get_chat_history(username: str):
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
+        
+        # Get chat threads for the user
         cursor.execute(
-            "SELECT id, user_message, bot_reply, timestamp "
-            "FROM chat_history WHERE user = %s ORDER BY timestamp ASC", 
+            "SELECT id, title, created_at FROM chat_threads WHERE user = %s ORDER BY created_at DESC", 
             (username,)
         )
-        chats = cursor.fetchall()
-        return {"chat_history": chats}
+        threads = cursor.fetchall()
+        
+        # For each thread, get the messages (optional: limit to first few for preview)
+        for thread in threads:
+            cursor.execute(
+                "SELECT role, content FROM messages WHERE chat_id = %s ORDER BY timestamp ASC",
+                (thread["id"],)
+            )
+            thread["messages"] = cursor.fetchall()  # Full messages for loading
+        
+        return {"chat_history": threads}
     except Exception as e:
         print(f"Chat history error: {traceback.format_exc()}")
         return JSONResponse(status_code=500, content={"error": "Failed to fetch history"})
