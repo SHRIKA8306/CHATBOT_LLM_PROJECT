@@ -115,6 +115,10 @@ def render_chat_from_history():
                 with col1:
                     if st.button("Save", key=f"save_{i}", use_container_width=True):
                         st.session_state.messages[i]["content"] = edited
+                        st.session_state.messages = st.session_state.messages[: i + 1]
+                        # Call API again with edited message
+                        reply = api_chat(edited)
+                        st.session_state.messages.append({"role": "assistant", "content": reply})
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
                         st.rerun()
