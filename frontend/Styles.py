@@ -386,6 +386,7 @@ def apply_styles():
   right: 14px !important;
   z-index: 3 !important;
 }
+*/
 
 
 
