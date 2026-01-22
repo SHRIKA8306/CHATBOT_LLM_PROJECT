@@ -24,6 +24,8 @@ st.session_state.setdefault("selected_history", None)
 st.session_state.setdefault("editing", None)
 st.session_state.setdefault("edit_text", "")
 st.session_state.setdefault("chat_id", None)  # Track current chat thread ID for continuation
+st.session_state.setdefault("renaming_chat", None)
+st.session_state.setdefault("rename_text", "")
 
 apply_styles()
 
@@ -309,8 +311,7 @@ else:
             st.session_state.chat_id = None  # Reset chat_id
             st.query_params.pop("history", None)
             st.rerun()
-
-        st.markdown("### Chat History")
+            st.markdown("### Chat History")
 
         try:
             response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
@@ -320,28 +321,76 @@ else:
                 hist = _qp_first("history")
                 if hist:
                     load_history_chat(str(hist), history)
-                else:
-                    load_history_chat("", history)
 
                 with st.container(height=450):
                     for thread in history:
-                        preview = thread.get("title", "Untitled Chat")
-                        if st.button(preview, key=f"chat_{thread['id']}", use_container_width=True):
-                            st.session_state.selected_history = thread["id"]
-                            st.session_state.chat_id = thread["id"]  # Set chat_id for continuation
-                            # Load all messages for this thread
-                            st.session_state.messages = [
-                                {"role": msg["role"], "content": msg["content"]} for msg in thread.get("messages", [])
-                            ]
-                            _set_qp(history=str(thread["id"]))
-                            st.rerun()
-        except Exception:
-            pass
-        
+                        chat_id = thread["id"]
+                        title = thread.get("title", "Untitled Chat")
+
+                        row = st.columns([8, 1])
+
+                        # --- Chat select ---
+                        with row[0]:
+                            if st.button(title, key=f"chat_{chat_id}", use_container_width=True):
+                                st.session_state.selected_history = chat_id
+                                st.session_state.chat_id = chat_id
+                                st.session_state.messages = [
+                                    {"role": msg["role"], "content": msg["content"]}
+                                    for msg in thread.get("messages", [])
+                                ]
+                                _set_qp(history=str(chat_id))
+                                st.rerun()
+
+                        # --- 3 dots menu ---
+                        with row[1]:
+                            with st.popover("⋮"):
+                                if st.button("🔗 Share", key=f"share_{chat_id}", use_container_width=True):
+                                    share_link = f"http://localhost:8501/?history={chat_id}"
+                                    st.info(f"Share link:\n{share_link}")
+
+                                if st.button("✏️ Rename", key=f"rename_btn_{chat_id}", use_container_width=True):
+                                    st.session_state.renaming_chat = chat_id
+                                    st.session_state.rename_text = title
+                                    st.rerun()
+
+                                if st.button("🗑️ Delete", key=f"delete_{chat_id}", use_container_width=True):
+                                    requests.delete(f"{API_BASE_URL}/delete_chat/{chat_id}")
+                                    st.rerun()
+
+                        # --- Rename UI ---
+                        if st.session_state.renaming_chat == chat_id:
+                            new_title = st.text_input(
+                                "Rename chat",
+                                value=st.session_state.rename_text,
+                                key=f"rename_input_{chat_id}"
+                            )
+
+                            c1, c2 = st.columns(2)
+                            with c1:
+                                if st.button("Save", key=f"save_{chat_id}", use_container_width=True):
+                                    requests.put(
+                                        f"{API_BASE_URL}/rename_chat/{chat_id}",
+                                        json={"title": new_title}
+                                    )
+                                    st.session_state.renaming_chat = None
+                                    st.rerun()
+
+                            with c2:
+                                if st.button("Cancel", key=f"cancel_{chat_id}", use_container_width=True):
+                                    st.session_state.renaming_chat = None
+                                    st.rerun()
+
+        except Exception as e:
+            st.error(f"History load failed: {e}")
+
+        # Logout outside loop
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
+
+
+        
 
     top_l, top_r = st.columns([4, 2], vertical_alignment="center")
     with top_l:
