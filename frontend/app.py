@@ -3,7 +3,10 @@ import requests
 import base64
 from right_side import show_right_sidebar
 from Styles import apply_styles
+import pyperclip
 
+def copy_to_clipboard(text: str):
+    pyperclip.copy(text)
 st.set_page_config(
     page_title="Women's Safety Assistant",
     layout="wide",
@@ -117,12 +120,14 @@ def render_chat_from_history():
                 with col1:
                     if st.button("Save", key=f"save_{i}", use_container_width=True):
                         st.session_state.messages[i]["content"] = edited
-                        st.session_state.messages = st.session_state.messages[: i + 1]
-                        # Call API again with edited message
+                        # Remove all messages after this one (including the old assistant response)
+                        st.session_state.messages = st.session_state.messages[:i+1]
+                        # Get new response from API
                         reply = api_chat(edited)
                         st.session_state.messages.append({"role": "assistant", "content": reply})
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
+                        st.session_state["pending_edit"] = i  
                         st.rerun()
 
                 with col2:
@@ -137,14 +142,20 @@ def render_chat_from_history():
 
                 # Edit icon inside bubble (right aligned)
                 if role == "user":
-                    edit_col = st.columns([8, 1])[1]
-                    with edit_col:
-                        if st.button("✎", key=f"edit_{i}", help="Edit message"):
+                    with st.container():
+                        spacer,col_copy, col_edit = st.columns([10,1, 1])
+                        with col_copy:
+                            if st.button("📋",key=f"copy_{i}",help="Copy message"):
+                                copy_to_clipboard(chat.get("content", ""))
+                                st.toast("Copied to clipboard!")
+
+                        with col_edit:
+                         if st.button("✎", key=f"edit_{i}", help="Edit message"):
                             st.session_state.editing = i
                             st.session_state.edit_text = chat.get("content", "")
                             st.rerun()
 
-          
+   
 def api_chat(prompt: str) -> str:
     data = {"message": prompt, "user": st.session_state.username}
     if st.session_state.chat_id:
