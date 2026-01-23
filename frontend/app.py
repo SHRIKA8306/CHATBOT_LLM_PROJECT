@@ -163,16 +163,21 @@ def render_chat_from_history():
                     with st.container():
                         spacer, col_copy, col_edit = st.columns([10, 1, 1])
                         with col_copy:
-                            if st.button("📋", key=f"copy_{i}", help="Copy message"):
+                            if st.button("⧉", key=f"copy_{i}", help="Copy message"):
                                 copy_to_clipboard(chat.get("content", ""))
                                 st.toast("Copied to clipboard!")
-
                         with col_edit:
                             if st.button("✎", key=f"edit_{i}", help="Edit message"):
                                 st.session_state.editing = i
                                 st.session_state.edit_text = chat.get("content", "")
                                 st.rerun()
-
+                elif role == "assistant":
+                    with st.container():
+                        spacer, col_copy = st.columns([10, 1])
+                        with col_copy:
+                            if st.button("⧉", key=f"copy_{i}", help="Copy message"):
+                               copy_to_clipboard(chat.get("content", ""))
+                               st.toast("Copied to clipboard!")
    
 def api_chat(prompt: str):
     data = {"message": prompt, "user": st.session_state.username}
@@ -334,7 +339,7 @@ else:
 
     with st.sidebar:
         display = st.session_state.display_name or _format_display_name(st.session_state.username)
-        st.markdown(f"<h2 style='font-weight:600; font-size:30px'>Hi {display}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='font-weight:500; font-size:20px'>Hi {display}</h2>", unsafe_allow_html=True)
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None

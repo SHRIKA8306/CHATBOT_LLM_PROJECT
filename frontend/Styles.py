@@ -194,19 +194,7 @@ def apply_styles():
           border: 1px solid var(--border-soft) !important;
           backdrop-filter: blur(10px);
         }
-
-        /* Buttons inside chat bubbles should be compact and not wrap text */
-        [data-testid="stChatMessage"] .stButton > button {
-          padding: 10px 20px !important;
-          font-size: 15px !important;
-          height: auto !important;
-          min-height: 44px !important;
-          border-radius: 24px !important;
-          white-space: nowrap !important;
-        }
-
-
-        /* Ensure Save/Cancel remain roomy and don't wrap their text */
+/* Ensure Save/Cancel remain roomy and don't wrap their text */
         [data-testid="stChatMessage"] .stButton > button[aria-label="Save"],
         [data-testid="stChatMessage"] .stButton > button[aria-label="Cancel"] {
           padding: 10px 28px !important;
@@ -325,7 +313,7 @@ def apply_styles():
 [data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:hover,
 [data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:focus,
 [data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:active {
-  background: transparent !important;
+  background: var(--ws-text) !important;
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
@@ -342,7 +330,6 @@ def apply_styles():
   display: inline-flex !important;
   align-items: center !important;
 }
-
 
 /* Place edit icon inside chat bubble, top-right corner */
 [data-testid="stChatMessage"] > div {
@@ -378,18 +365,6 @@ def apply_styles():
 [data-testid="stChatMessage"] > div {
   position: relative !important;
 }
-
-/* ===== POSITION EDIT ICON AT BOTTOM-RIGHT INSIDE CHAT BUBBLE ===== */
-[data-testid="stChatMessage"] .stButton:has(button[aria-label="✎"]) {
-  position: absolute !important;
-  bottom: 12px !important;
-  right: 14px !important;
-  z-index: 3 !important;
-}
-*/
-
-
-
         </style>
         """,
         unsafe_allow_html=True
