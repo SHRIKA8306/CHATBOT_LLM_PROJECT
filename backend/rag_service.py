@@ -116,19 +116,35 @@ def process_helplines(helplines_data):
     return chunks
 
 def process_laws(laws_data):
-    """Convert laws JSON to searchable chunks"""
+    """Convert laws JSON to searchable chunks with better structure"""
     chunks = []
     
     for section_key, section_data in laws_data.items():
-        chunk_text = f"{section_key}: {section_data['main_keywords']}. "
-        chunk_text += f"Details: {section_data['info']} "
-        chunk_text += f"Punishment: {section_data['punishment']}"
+        # Create multiple chunks per law for better retrieval:
+        # 1. Full law chunk
+        full_chunk_text = f"{section_key}: {section_data['main_keywords']}. "
+        full_chunk_text += f"Details: {section_data['info']} "
+        full_chunk_text += f"Punishment: {section_data['punishment']}"
         
         chunks.append({
-            "id": f"law_{section_key.replace(' ', '_').replace('/', '_')}",
-            "text": chunk_text,
+            "id": f"law_full_{section_key.replace(' ', '_').replace('/', '_')}",
+            "text": full_chunk_text,
             "metadata": {
                 "type": "legal",
+                "section": section_key,
+                "keywords": section_data["main_keywords"],
+                "info": section_data["info"],
+                "punishment": section_data["punishment"]
+            }
+        })
+        
+        # 2. Keywords-focused chunk for better keyword matching
+        keyword_chunk = f"{section_key} related to {section_data['main_keywords']}. This law covers: {section_data['info']}"
+        chunks.append({
+            "id": f"law_keywords_{section_key.replace(' ', '_').replace('/', '_')}",
+            "text": keyword_chunk,
+            "metadata": {
+                "type": "legal_keywords",
                 "section": section_key,
                 "keywords": section_data["main_keywords"],
                 "info": section_data["info"],
@@ -186,10 +202,13 @@ def setup_rag():
 # ============================================
 # RETRIEVAL FUNCTIONS
 # ============================================
-def retrieve_context(query, top_k=3):
-    """Retrieve relevant context from Pinecone"""
+def retrieve_context(query, top_k=5):
+    """Retrieve relevant context from Pinecone with multi-query strategy"""
     index = get_index()
     embedder = get_embedder()
+    
+    # Collect results from original query
+    all_results = {}
     
     query_embedding = embedder.encode(query).tolist()
     
@@ -199,33 +218,50 @@ def retrieve_context(query, top_k=3):
         include_metadata=True
     )
     
-    contexts = []
     for match in results['matches']:
-        contexts.append({
+        match_id = match['id']
+        all_results[match_id] = {
             "text": match['metadata']['text'],
             "score": match['score'],
             "metadata": match['metadata']
-        })
+        }
+    
+    # Sort by score and return top results
+    sorted_results = sorted(all_results.values(), key=lambda x: x['score'], reverse=True)
+    
+    contexts = []
+    for result in sorted_results[:top_k]:
+        contexts.append(result)
     
     return contexts
 
 def build_rag_prompt(user_message, contexts):
-    """Build enhanced prompt with retrieved context"""
-    context_str = "\n\n".join([f"Context {i+1}: {ctx['text']}" 
-                               for i, ctx in enumerate(contexts)])
+    """Build enhanced prompt with retrieved context and better instructions
+    (Kept for backward compatibility - use build_conversation_with_rag instead)"""
     
-    prompt = f"""You are a Women's Safety Assistant with access to verified information about helplines and laws in India.
+    if contexts:
+        context_str = "\n\n".join([f"**Relevant Information {i+1}:**\n{ctx['text']}" 
+                                   for i, ctx in enumerate(contexts)])
+    else:
+        context_str = "No specific information found in database."
+    
+    prompt = f"""You are a knowledgeable Women's Safety Assistant with expertise in Indian laws, women's rights, and safety resources.
 
-VERIFIED INFORMATION:
+RETRIEVED VERIFIED INFORMATION:
 {context_str}
 
 INSTRUCTIONS:
-- ONLY answer questions related to women's safety in India
-- Use the VERIFIED INFORMATION above when relevant
-- Include specific helpline numbers and law sections from the context
-- If the question is unrelated to women's safety, politely say: "Sorry, I can only answer questions about women's safety."
-- Be empathetic, clear, and supportive
-- Always prioritize immediate safety (suggest calling 112 or 100 for emergencies)
+1. **Answer women's safety questions comprehensively** - Even if context is limited, provide your knowledge about relevant laws, protections, and resources
+2. **Use retrieved information** when available and mark it clearly (e.g., "According to Section XYZ..." or "Per the helpline database...")
+3. **Include relevant details** like:
+   - Specific law sections or acts that apply
+   - Punishments for violations (if asking about crimes)
+   - Relevant helpline numbers from your knowledge
+   - Available protections and legal remedies
+4. **For out-of-scope questions** (unrelated to women's safety), politely decline
+5. **Always prioritize safety** - For emergencies, always recommend calling 112 (emergency) or 100 (police)
+6. **Be empathetic and supportive** - Use clear, simple language
+7. **Provide actionable information** - Help the user understand their options and next steps
 
 User Question: {user_message}
 
@@ -238,7 +274,7 @@ Your Response:"""
 # ============================================
 if __name__ == "__main__":
     # Uncomment to upload data to Pinecone (run once)
-    #setup_rag()
+    setup_rag()
     
     # Test retrieval
     test_query = "What helplines are available in Kerala for domestic violence?"

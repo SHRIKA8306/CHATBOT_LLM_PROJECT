@@ -188,5 +188,45 @@
     "main_keywords": "POSH, Workplace harassment",
     "info": "Provides protection against sexual harassment of women at workplaces with redressal mechanism and internal complaints committees.",
     "punishment": "Penalty for non-compliance by employer: fine up to 50,000 INR; offender may face disciplinary or criminal action."
+  },
+  "section 66E IT Act": {
+    "main_keywords": "Cyber harassment, Privacy violation, Photography without consent",
+    "info": "Punishes publishing intimate images or videos of a woman without consent, including through electronic means. Covers non-consensual intimate photography and distribution.",
+    "punishment": "Imprisonment up to three years, and fine up to two lakh rupees; for repeat offense, up to five years and five lakh rupees."
+  },
+  "section 67 IT Act": {
+    "main_keywords": "Obscene material online, Cyber pornography",
+    "info": "Punishes publishing obscene material in electronic form including pornography, obscene images, and sexual content designed to corrupt minors.",
+    "punishment": "Imprisonment up to five years for first offense; three years for subsequent offenses; fine up to one lakh rupees."
+  },
+  "section 67A IT Act": {
+    "main_keywords": "Child sexual abuse material, CSAM, Pornography of minors",
+    "info": "Specific provision for creating, distributing, or accessing sexually explicit content involving children in any form including photographs, videos, or drawings.",
+    "punishment": "Imprisonment from five to seven years for first offense; up to ten years for subsequent offenses; fine up to ten lakh rupees."
+  },
+  "section 354C IT Act": {
+    "main_keywords": "Cyber voyeurism, Hidden camera, Recording without consent",
+    "info": "Punishes recording, transmitting, or publishing images of a woman without her knowledge intending to violate privacy, including through video calls or hidden devices.",
+    "punishment": "Imprisonment from three to seven years, and fine up to ten lakh rupees."
+  },
+  "section 406 & 420 IPC": {
+    "main_keywords": "Online fraud, Cheating, Catfishing",
+    "info": "Covers online cheating, fraud schemes, phishing, and false promises made through digital platforms targeting women (Romance scams, fake investment schemes).",
+    "punishment": "Imprisonment up to seven years, and fine up to one lakh rupees for fraud."
+  },
+  "section 511 IPC": {
+    "main_keywords": "Cyber stalking, Online harassment, Threatening messages",
+    "info": "Punishes repeated unsolicited contact, threatening messages, abusive language, and intimidation through digital platforms including social media.",
+    "punishment": "Imprisonment up to seven years, and fine up to one lakh rupees."
+  },
+  "act Information Technology Act 2000 - Section 79": {
+    "main_keywords": "Social media responsibility, Platform accountability",
+    "info": "Holds social media platforms and intermediaries responsible for moderating abusive, threatening, or defamatory content against women and removing harmful material.",
+    "punishment": "Platforms can face penalties if they fail to remove illegal content within prescribed timeframe; criminal liability up to seven years imprisonment."
+  },
+  "Bharatiya Nyaya Sanhita 2023 (New Criminal Law)": {
+    "main_keywords": "Digital harassment, Cyber crime against women, Modern offenses",
+    "info": "Recently enacted law (2023) that includes comprehensive provisions for cyber crimes including digital harassment, online sexual exploitation, and electronic abuse against women.",
+    "punishment": "Enhanced punishments for cyber crimes; imprisonment up to seven years and fines up to five lakh rupees for cyber harassment and exploitation."
   }
 }

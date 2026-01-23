@@ -173,6 +173,69 @@ async def forgot_password(request: Request):
         return JSONResponse(status_code=500, content={"error": "Server error"})
 
 
+# Helper function to get conversation history
+def get_conversation_history(cursor, chat_id, limit=10):
+    """Fetch recent conversation history for context"""
+    try:
+        cursor.execute(
+            "SELECT role, content FROM messages WHERE chat_id = %s ORDER BY timestamp DESC LIMIT %s",
+            (chat_id, limit)
+        )
+        messages = cursor.fetchall()
+        # Reverse to get chronological order
+        return [(msg[0], msg[1]) for msg in reversed(messages)]
+    except:
+        return []
+
+# Helper function to build conversation context
+def build_conversation_with_rag(user_message, contexts, conversation_history):
+    """Build prompt with conversation history + RAG context (like ChatGPT)"""
+    
+    # Add context info
+    if contexts:
+        context_str = "\n\n".join([f"**Information {i+1}:**\n{ctx['text']}" 
+                                   for i, ctx in enumerate(contexts)])
+    else:
+        context_str = "No specific database information found."
+    
+    # Build conversation history for context
+    conv_history_str = ""
+    if conversation_history:
+        conv_history_str = "CONVERSATION HISTORY:\n"
+        for role, msg in conversation_history[-5:]:  # Use last 5 messages for context
+            prefix = "User" if role == "user" else "Assistant"
+            conv_history_str += f"{prefix}: {msg}\n"
+        conv_history_str += "\n"
+    
+    system_prompt = """You are an expert Women's Safety Assistant for India with deep knowledge of:
+- Indian laws and legal protections for women
+- Cybercrime laws and digital safety
+- Support resources and helplines
+- Women's rights and safety measures
+
+You provide comprehensive, compassionate, and actionable advice. Always be supportive and empowering."""
+    
+    prompt = f"""{system_prompt}
+
+{conv_history_str}
+
+VERIFIED DATABASE INFORMATION:
+{context_str}
+
+CURRENT USER QUESTION: {user_message}
+
+Instructions:
+1. Provide comprehensive answers that go beyond the database info if you have knowledge
+2. Cite specific laws, sections, or helplines when relevant
+3. For emergency situations, prioritize safety (mention 112, 100, or 1091)
+4. Be empathetic, clear, and use simple language
+5. Provide actionable steps the user can take
+6. If discussing something beyond women's safety, politely redirect
+
+Provide a thorough, helpful response:"""
+    
+    return prompt
+
 # ----------------- CHAT WITH RAG -----------------
 @app.post("/chat")
 async def chat(request: Request):
@@ -206,26 +269,33 @@ async def chat(request: Request):
         )
         conn.commit()
 
-        # RAG retrieval
+        # RAG retrieval with higher context
         contexts = []
         try:
-            contexts = retrieve_context(user_msg, top_k=3)
+            contexts = retrieve_context(user_msg, top_k=5)
         except Exception as rag_error:
             print(f"RAG retrieval failed: {rag_error}")
 
-        # Build prompt
+        # Get conversation history for context (like ChatGPT)
+        conversation_history = get_conversation_history(cursor, chat_id, limit=10)
+
+        # Build enhanced prompt with history + RAG
         try:
-            prompt = build_rag_prompt(user_msg, contexts)
+            prompt = build_conversation_with_rag(user_msg, contexts, conversation_history)
         except Exception as prompt_error:
             print(f"Prompt building failed: {prompt_error}")
-            prompt = f"User: {user_msg}\nAssistant:"
+            prompt = user_msg
 
-        # LLM call
+        # LLM call with conversation context
+        messages_for_llm = [
+            {"role": "user", "content": prompt}
+        ]
+        
         response = client.chat.completions.create(
             model=GROQ_MODEL,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages_for_llm,
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=2000  # Increased for more detailed responses
         )
         bot_reply = response.choices[0].message.content or "Sorry, I couldn't generate a response."
 
@@ -236,13 +306,14 @@ async def chat(request: Request):
         )
         conn.commit()
 
-        # Prepare sources
+        # Prepare sources with better formatting
         sources = []
         for ctx in contexts[:3]:
             try:
                 source = {
-                    "text": (ctx.get("text") or "")[:150] + "..." if ctx.get("text") else "N/A",
+                    "text": (ctx.get("text") or "")[:200] + "..." if ctx.get("text") else "N/A",
                     "type": ctx.get("metadata", {}).get("type", "unknown"),
+                    "section": ctx.get("metadata", {}).get("section", ""),
                     "relevance": round(ctx.get("score", 0), 3)
                 }
                 sources.append(source)

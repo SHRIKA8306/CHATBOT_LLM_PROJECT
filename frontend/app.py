@@ -98,6 +98,9 @@ if _qp_first("logged_in") == "1" and _qp_first("user"):
 if _qp_first("history"):
     st.session_state.selected_history = _qp_first("history")
 
+# Store sources for display
+st.session_state.setdefault("sources", {})
+
 # ---------------- HELPERS ----------------
 def render_chat_from_history():
     for i, chat in enumerate(st.session_state.messages):
@@ -123,8 +126,9 @@ def render_chat_from_history():
                         # Remove all messages after this one (including the old assistant response)
                         st.session_state.messages = st.session_state.messages[:i+1]
                         # Get new response from API
-                        reply = api_chat(edited)
+                        reply, sources = api_chat(edited)
                         st.session_state.messages.append({"role": "assistant", "content": reply})
+                        st.session_state.sources[len(st.session_state.messages)-1] = sources
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
                         st.session_state["pending_edit"] = i  
@@ -138,25 +142,39 @@ def render_chat_from_history():
 
             # ---------- NORMAL MODE ----------
             else:
+                # Display message content with markdown support
                 st.markdown(chat.get("content", ""))
+                
+                # Show sources for assistant messages (like ChatGPT's citations)
+                if role == "assistant" and i in st.session_state.sources:
+                    sources = st.session_state.sources[i]
+                    if sources:
+                        with st.expander("📚 Sources & References", expanded=False):
+                            for j, source in enumerate(sources, 1):
+                                st.markdown(f"""
+**Reference {j}:** {source.get('section', source.get('type', 'N/A'))}
+- **Type:** {source.get('type', 'Unknown')}
+- **Relevance Score:** {source.get('relevance', 'N/A')}
+- **Info:** {source.get('text', 'N/A')}
+                                """)
 
                 # Edit icon inside bubble (right aligned)
                 if role == "user":
                     with st.container():
-                        spacer,col_copy, col_edit = st.columns([10,1, 1])
+                        spacer, col_copy, col_edit = st.columns([10, 1, 1])
                         with col_copy:
-                            if st.button("📋",key=f"copy_{i}",help="Copy message"):
+                            if st.button("📋", key=f"copy_{i}", help="Copy message"):
                                 copy_to_clipboard(chat.get("content", ""))
                                 st.toast("Copied to clipboard!")
 
                         with col_edit:
-                         if st.button("✎", key=f"edit_{i}", help="Edit message"):
-                            st.session_state.editing = i
-                            st.session_state.edit_text = chat.get("content", "")
-                            st.rerun()
+                            if st.button("✎", key=f"edit_{i}", help="Edit message"):
+                                st.session_state.editing = i
+                                st.session_state.edit_text = chat.get("content", "")
+                                st.rerun()
 
    
-def api_chat(prompt: str) -> str:
+def api_chat(prompt: str):
     data = {"message": prompt, "user": st.session_state.username}
     if st.session_state.chat_id:
         data["chat_id"] = st.session_state.chat_id  # Include chat_id if continuing a thread
@@ -166,8 +184,9 @@ def api_chat(prompt: str) -> str:
         # Update chat_id if it's a new thread
         if not st.session_state.chat_id:
             st.session_state.chat_id = response_data.get("chat_id")
-        return response_data.get("reply", "")
-    return "Server error. Please try again."
+        sources = response_data.get("sources", [])
+        return response_data.get("reply", ""), sources
+    return "Server error. Please try again.", []
 
 def load_history_chat(history_id: str, history_list: list):
     for thread in history_list:
@@ -414,8 +433,9 @@ else:
         with c2:
             if st.button("Emergency", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})
-                reply = api_chat("Give me all women's safety helpline numbers in India")
+                reply, sources = api_chat("Give me all women's safety helpline numbers in India")
                 st.session_state.messages.append({"role": "assistant", "content": reply})
+                st.session_state.sources[len(st.session_state.messages)-1] = sources
                 st.rerun()
 
     body_l, body_r = st.columns([3, 1], gap="large")
@@ -430,6 +450,8 @@ else:
 
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
-        reply = api_chat(user_input)
+        with st.spinner("🛡️ Generating response..."):
+            reply, sources = api_chat(user_input)
         st.session_state.messages.append({"role": "assistant", "content": reply})
+        st.session_state.sources[len(st.session_state.messages)-1] = sources
         st.rerun()
