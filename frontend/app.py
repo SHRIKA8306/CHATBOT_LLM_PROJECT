@@ -125,13 +125,18 @@ def render_chat_from_history():
                         st.session_state.messages[i]["content"] = edited
                         # Remove all messages after this one (including the old assistant response)
                         st.session_state.messages = st.session_state.messages[:i+1]
-                        # Get new response from API
-                        reply, sources = api_chat(edited)
-                        st.session_state.messages.append({"role": "assistant", "content": reply})
-                        st.session_state.sources[len(st.session_state.messages)-1] = sources
+                        # Clear old sources
+                        keys_to_remove = [k for k in st.session_state.sources.keys() if k > i]
+                        for k in keys_to_remove:
+                            del st.session_state.sources[k]
+    
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
-                        st.session_state["pending_edit"] = i  
+                        # Get new response
+                        with st.spinner("🛡️ Generating response..."):
+                            reply, sources = api_chat(edited)
+                            st.session_state.messages.append({"role": "assistant", "content": reply})
+                            st.session_state.sources[len(st.session_state.messages)-1] = sources
                         st.rerun()
 
                 with col2:
