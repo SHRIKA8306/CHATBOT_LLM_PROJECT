@@ -109,17 +109,14 @@ def render_chat_from_history():
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("Save", key=f"save_{i}", use_container_width=True):
-                        # FIX: Remove the old user message AND the assistant response that followed
-                        # Keep everything up to (but not including) the edited message
+                        # Keep everything BEFORE the edited message (index i)
                         st.session_state.messages = st.session_state.messages[:i]
                         
-                        # Add the edited message
+                        # Add the edited user message
                         st.session_state.messages.append({"role": "user", "content": edited})
                         
-                        # Clear sources from deleted messages
-                        keys_to_remove = [k for k in st.session_state.sources.keys() if k > i]
-                        for k in keys_to_remove:
-                            del st.session_state.sources[k]
+                        # Clear ALL sources for messages at index i and beyond
+                        st.session_state.sources = {k: v for k, v in st.session_state.sources.items() if k < i}
     
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
@@ -128,7 +125,8 @@ def render_chat_from_history():
                         with st.spinner("🛡️ Generating response..."):
                             reply, sources = api_chat(edited)
                             st.session_state.messages.append({"role": "assistant", "content": reply})
-                            st.session_state.sources[len(st.session_state.messages)-1] = sources
+                            # Store sources at the new assistant message index
+                            st.session_state.sources[len(st.session_state.messages) - 1] = sources
                         st.rerun()
 
                 with col2:
@@ -423,9 +421,17 @@ else:
     with body_r:
         show_right_sidebar()
 
-    user_input = st.chat_input("Ask about laws, safety, or emergencies...")
+    # Disable chat input while editing
+    chat_disabled = st.session_state.get("editing") is not None
+    if chat_disabled:
+        st.info("✏️ Finish editing the message first (click Save or Cancel)")
+    
+    user_input = st.chat_input(
+        "Ask about laws, safety, or emergencies...",
+        disabled=chat_disabled
+    )
 
-    if user_input:
+    if user_input and not chat_disabled:
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.spinner("🛡️ Generating response..."):
             reply, sources = api_chat(user_input)
