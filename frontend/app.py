@@ -109,17 +109,24 @@ def render_chat_from_history():
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("Save", key=f"save_{i}", use_container_width=True):
-                        # Keep everything BEFORE the edited message (index i)
+                        # Keep ONLY messages that come BEFORE the message being edited
                         st.session_state.messages = st.session_state.messages[:i]
                         
-                        # Add the edited user message
-                        st.session_state.messages.append({"role": "user", "content": edited})
-                        
-                        # Clear ALL sources for messages at index i and beyond
+                        # Clear ALL sources from this point onwards
                         st.session_state.sources = {k: v for k, v in st.session_state.sources.items() if k < i}
     
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
+                        
+                        # Add the edited message
+                        st.session_state.messages.append({"role": "user", "content": edited})
+                        
+                        # Clear old messages from backend (if chat exists)
+                        if st.session_state.chat_id:
+                            try:
+                                requests.delete(f"{API_BASE_URL}/clear_messages_after/{st.session_state.chat_id}/{i}")
+                            except:
+                                pass  # Continue even if deletion fails
                         
                         # Get new response
                         with st.spinner("🛡️ Generating response..."):

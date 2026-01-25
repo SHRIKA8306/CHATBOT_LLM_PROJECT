@@ -593,6 +593,41 @@ async def root():
     }
 
 
+@app.delete("/clear_messages_after/{chat_id}/{message_count}")
+async def clear_messages_after(chat_id: int, message_count: int):
+    """Clear messages after a specific count (used when editing messages)"""
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        # Get all message IDs for this chat
+        cursor.execute(
+            "SELECT id FROM messages WHERE chat_id = %s ORDER BY timestamp ASC",
+            (chat_id,)
+        )
+        message_ids = [row[0] for row in cursor.fetchall()]
+        
+        # Delete messages beyond the specified count
+        if len(message_ids) > message_count:
+            ids_to_delete = message_ids[message_count:]
+            placeholders = ','.join(['%s'] * len(ids_to_delete))
+            cursor.execute(f"DELETE FROM messages WHERE id IN ({placeholders})", ids_to_delete)
+            conn.commit()
+            return {"status": "success", "deleted": len(ids_to_delete)}
+        
+        return {"status": "success", "deleted": 0}
+    except Exception as e:
+        print(f"Clear messages error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
+
 if __name__ == "__main__":
     import uvicorn
     print(f"Starting server with model: {GEMINI_MODEL}")
