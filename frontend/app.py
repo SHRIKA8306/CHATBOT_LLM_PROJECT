@@ -7,6 +7,7 @@ import pyperclip
 
 def copy_to_clipboard(text: str):
     pyperclip.copy(text)
+
 st.set_page_config(
     page_title="Women's Safety Assistant",
     layout="wide",
@@ -26,34 +27,30 @@ st.session_state.setdefault("forgot_mode", False)
 st.session_state.setdefault("selected_history", None)
 st.session_state.setdefault("editing", None)
 st.session_state.setdefault("edit_text", "")
-st.session_state.setdefault("chat_id", None)  # Track current chat thread ID for continuation
+st.session_state.setdefault("chat_id", None)
 st.session_state.setdefault("renaming_chat", None)
 st.session_state.setdefault("rename_text", "")
 
 apply_styles()
 
-# ---------------- GOOGLE LOGIN CHECK (NEW - FIXED) ----------------
+# ---------------- GOOGLE LOGIN CHECK ----------------
 def _format_display_name(raw: str) -> str:
     if not raw:
         return ""
-    # If an email was provided, use the local part
     if "@" in raw:
         raw = raw.split("@")[0]
-    # If name contains spaces (e.g., 'Suja Khatri'), take first name and last initial
     parts = raw.split()
     if len(parts) >= 2:
         first = parts[0]
         last_initial = parts[-1][0]
         return f"{first.lower()} {last_initial.lower()}"
-    # If local part uses separators like '.' or '_', split and use first and last initial
     for sep in (".", "_"):
         if sep in raw:
             parts = raw.split(sep)
             if len(parts) >= 2:
                 return f"{parts[0].lower()} {parts[-1][0].lower()}"
-    # Otherwise return the single token lowercased
     return raw.lower()
-# Query-param helpers (define before use)
+
 def _get_qp():
     return st.query_params
 
@@ -63,42 +60,32 @@ def _set_qp(**kwargs):
 def _clear_qp():
     st.query_params.clear()
 
-
 def _qp_first(key: str):
-    """Return the first value for a query-param key (Streamlit may store lists)."""
     v = st.query_params.get(key)
     if isinstance(v, list) and v:
         return v[0]
     return v
-
 
 if _qp_first("google_login") == "1":
     google_user = _qp_first("user")
     google_name = _qp_first("name")
     if google_user:
         st.session_state.logged_in = True
-        # keep username as email for backend/chat storage
         st.session_state.username = google_user
-        # store a friendly display name for UI
         st.session_state.display_name = _format_display_name(google_name or google_user)
         _clear_qp()
         st.success(f"✅ Google login successful! Welcome {st.session_state.display_name}!")
         st.rerun()
 
-# ---------------- QUERY PARAMS ----------------
-
-# Restore login from query params (BOTH username/password + Google)
 params = _get_qp()
 if _qp_first("logged_in") == "1" and _qp_first("user"):
     st.session_state.logged_in = True
     st.session_state.username = _qp_first("user")
-    # restore display name if provided or derive from username
     st.session_state.display_name = _format_display_name(_qp_first("name") or _qp_first("user"))
 
 if _qp_first("history"):
     st.session_state.selected_history = _qp_first("history")
 
-# Store sources for display
 st.session_state.setdefault("sources", {})
 
 # ---------------- HELPERS ----------------
@@ -112,7 +99,7 @@ def render_chat_from_history():
             # ---------- EDIT MODE ----------
             if role == "user" and st.session_state.get("editing") == i:
                 edited = st.text_area(
-                    "",
+                    "Edit message",
                     value=st.session_state.edit_text or chat.get("content", ""),
                     key=f"inline_edit_{i}",
                     height=100,
@@ -122,16 +109,21 @@ def render_chat_from_history():
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("Save", key=f"save_{i}", use_container_width=True):
-                        st.session_state.messages[i]["content"] = edited
-                        # Remove all messages after this one (including the old assistant response)
-                        st.session_state.messages = st.session_state.messages[:i+1]
-                        # Clear old sources
+                        # FIX: Remove the old user message AND the assistant response that followed
+                        # Keep everything up to (but not including) the edited message
+                        st.session_state.messages = st.session_state.messages[:i]
+                        
+                        # Add the edited message
+                        st.session_state.messages.append({"role": "user", "content": edited})
+                        
+                        # Clear sources from deleted messages
                         keys_to_remove = [k for k in st.session_state.sources.keys() if k > i]
                         for k in keys_to_remove:
                             del st.session_state.sources[k]
     
                         st.session_state.editing = None
                         st.session_state.edit_text = ""
+                        
                         # Get new response
                         with st.spinner("🛡️ Generating response..."):
                             reply, sources = api_chat(edited)
@@ -147,10 +139,8 @@ def render_chat_from_history():
 
             # ---------- NORMAL MODE ----------
             else:
-                # Display message content with markdown support
                 st.markdown(chat.get("content", ""))
                 
-                # Show sources for assistant messages (like ChatGPT's citations)
                 if role == "assistant" and i in st.session_state.sources:
                     sources = st.session_state.sources[i]
                     if sources:
@@ -163,7 +153,6 @@ def render_chat_from_history():
 - **Info:** {source.get('text', 'N/A')}
                                 """)
 
-                # Edit icon inside bubble (right aligned)
                 if role == "user":
                     with st.container():
                         spacer, col_copy, col_edit = st.columns([10, 1, 1])
@@ -187,11 +176,10 @@ def render_chat_from_history():
 def api_chat(prompt: str):
     data = {"message": prompt, "user": st.session_state.username}
     if st.session_state.chat_id:
-        data["chat_id"] = st.session_state.chat_id  # Include chat_id if continuing a thread
+        data["chat_id"] = st.session_state.chat_id
     res = requests.post(API_URL, json=data)
     if res.status_code == 200:
         response_data = res.json()
-        # Update chat_id if it's a new thread
         if not st.session_state.chat_id:
             st.session_state.chat_id = response_data.get("chat_id")
         sources = response_data.get("sources", [])
@@ -205,7 +193,7 @@ def load_history_chat(history_id: str, history_list: list):
                 {"role": msg["role"], "content": msg["content"]} for msg in thread.get("messages", [])
             ]
             st.session_state.selected_history = thread.get("id")
-            st.session_state.chat_id = thread.get("id")  # Set chat_id for continuation
+            st.session_state.chat_id = thread.get("id")
             return
 
 # ---------------- LOGIN / REGISTER ----------------
@@ -213,7 +201,6 @@ if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # -------- HEADER --------
         img_base64 = base64.b64encode(open("logo.png", "rb").read()).decode()
         st.markdown(
             f"""
@@ -236,14 +223,12 @@ if not st.session_state.logged_in:
             unsafe_allow_html=True
         )
 
-        # -------- GOOGLE LOGIN BUTTON (NEW - FIXED) --------
         if st.button("🔐 Login with Google", use_container_width=True, type="primary"):
             try:
                 res = requests.get(f"{API_BASE_URL}/auth/google")
                 if res.status_code == 200:
                     auth_url = res.json()["auth_url"]
                     st.markdown(f'[Click here to continue Google login]({auth_url})')
-
                 else:
                     st.error("Backend error - check if backend is running on port 8000")
             except:
@@ -252,7 +237,6 @@ if not st.session_state.logged_in:
         st.markdown("---")
         st.caption("OR use username/password:")
 
-        # -------- LOGIN --------
         if st.session_state.auth_mode == "login":
             st.subheader("Login")
             login_username = st.text_input("Username", key="login_username")
@@ -264,19 +248,13 @@ if not st.session_state.logged_in:
                 if st.button("Login", use_container_width=True):
                     res = requests.post(
                         f"{API_BASE_URL}/login",
-                        json={
-                            "username": login_username,
-                            "password": login_password
-                        }
+                        json={"username": login_username, "password": login_password}
                     )
                     if res.status_code == 200:
                         data = res.json()
                         email = data.get("email") or login_username
                         st.session_state.logged_in = True
-                        # Use email as canonical username so chat history is shared
                         st.session_state.username = email
-                        # Show the literal username entered when logging in via username/password
-                        # If the user entered a username (not an email), prefer that for display.
                         if login_username and "@" not in login_username:
                             st.session_state.display_name = login_username
                         else:
@@ -308,7 +286,6 @@ if not st.session_state.logged_in:
                     else:
                         st.error("Reset failed")
 
-        # -------- REGISTER --------
         else:
             st.subheader("Register")
             reg_username = st.text_input("Username", key="reg_username")
@@ -337,7 +314,6 @@ if not st.session_state.logged_in:
 
 # ---------------- LOGGED IN UI ----------------
 else:
-    # Ensure query params are set for persistence
     _set_qp(logged_in="1", user=st.session_state.username, name=st.session_state.display_name)
     if st.session_state.selected_history:
         _set_qp(history=str(st.session_state.selected_history))
@@ -348,10 +324,11 @@ else:
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
-            st.session_state.chat_id = None  # Reset chat_id
+            st.session_state.chat_id = None
             st.query_params.pop("history", None)
             st.rerun()
-            st.markdown("### Chat History")
+        
+        st.markdown("### Chat History")
 
         try:
             response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
@@ -369,7 +346,6 @@ else:
 
                         row = st.columns([8, 1])
 
-                        # --- Chat select ---
                         with row[0]:
                             if st.button(title, key=f"chat_{chat_id}", use_container_width=True):
                                 st.session_state.selected_history = chat_id
@@ -381,7 +357,6 @@ else:
                                 _set_qp(history=str(chat_id))
                                 st.rerun()
 
-                        # --- 3 dots menu ---
                         with row[1]:
                             with st.popover("⋮"):
                                 if st.button("🔗 Share", key=f"share_{chat_id}", use_container_width=True):
@@ -397,7 +372,6 @@ else:
                                     requests.delete(f"{API_BASE_URL}/delete_chat/{chat_id}")
                                     st.rerun()
 
-                        # --- Rename UI ---
                         if st.session_state.renaming_chat == chat_id:
                             new_title = st.text_input(
                                 "Rename chat",
@@ -423,14 +397,10 @@ else:
         except Exception as e:
             st.error(f"History load failed: {e}")
 
-        # Logout outside loop
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
-
-
-        
 
     top_l, top_r = st.columns([4, 2], vertical_alignment="center")
     with top_l:
@@ -439,7 +409,6 @@ else:
 
     with top_r:
         c1, c2 = st.columns(2)
-
         with c2:
             if st.button("Emergency", use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})
@@ -453,8 +422,6 @@ else:
         render_chat_from_history()
     with body_r:
         show_right_sidebar()
-
-    # (Inline editing is handled inside render_chat_from_history)
 
     user_input = st.chat_input("Ask about laws, safety, or emergencies...")
 

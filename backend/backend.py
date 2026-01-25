@@ -11,10 +11,17 @@ from auth import (
 )
 import mysql.connector
 import os
-from dotenv import load_dotenv
 import traceback
-from groq import Groq
 import urllib.parse
+import warnings
+
+# Suppress warnings
+warnings.filterwarnings('ignore', category=FutureWarning)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+from dotenv import load_dotenv
+from google import genai
 from rag_service import retrieve_context, build_rag_prompt
 
 # Load environment variables
@@ -30,19 +37,88 @@ app.add_middleware(
 )
 
 # Validate required env vars at startup
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama3-8b-8192")  # Default fallback
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash")
+
+# Ensure model has correct format for new SDK
+if not GEMINI_MODEL.startswith("models/"):
+    GEMINI_MODEL = f"models/{GEMINI_MODEL}"
+
 MYSQL_HOST = os.getenv("MYSQL_HOST")
 MYSQL_USER = os.getenv("MYSQL_USER")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY is required")
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY is required")
 if not all([MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE]):
     raise ValueError("All MySQL env vars are required")
 
-client = Groq(api_key=GROQ_API_KEY)
+# Configure Gemini with new API
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+# ========== IMPROVED SYSTEM PROMPT ==========
+SYSTEM_PROMPT = """# PERSONA
+You are an expert Women's Safety Assistant specializing in Indian legal frameworks, health guidance, and support systems. You provide accurate, empathetic, and actionable information to help women navigate safety concerns, legal rights, and support resources.
+
+# CORE EXPERTISE
+- Indian Penal Code (IPC) Sections: 354-376 (assault, harassment, rape), 498A (dowry harassment), 509 (word/gesture to insult modesty)
+- Special Acts: POCSO Act 2012, Domestic Violence Act 2005, IT Act 2000 (cyber crimes), Sexual Harassment at Workplace Act 2013
+- Women's health and reproductive rights
+- Emergency helplines and support networks
+- Safety protocols and prevention strategies
+
+# RULES
+1. Answer directly without self-introduction or role statements
+2. Prioritize accuracy over speed - verify legal information from provided database contexts
+3. Use empathetic, supportive tone while maintaining professional boundaries
+4. Cite specific legal sections when discussing laws
+5. Always provide actionable next steps or resources
+6. Maintain conversation context to avoid repetitive questions
+7. Default to Indian legal framework unless otherwise specified
+
+# CONSTRAINTS
+- DO NOT provide medical diagnoses or prescriptions (refer to healthcare professionals)
+- DO NOT offer specific legal advice (suggest consulting lawyers for case-specific guidance)
+- DO NOT share unverified information - clearly distinguish between established facts and general guidance
+- DO NOT dismiss or minimize user concerns
+- DO NOT use conversational fillers like "As a Women's Safety Assistant" or "I'm here to help with..."
+
+# KEY RESOURCES TO REFERENCE
+Emergency Numbers:
+- 112: National Emergency Number
+- 100: Police Helpline
+- 181: Women Helpline (24/7)
+- 1091: Women Helpline (specific states)
+- 1930: Cyber Crime Helpline
+- 7827-170-170: POCSO Helpline
+
+Support Organizations:
+- National Commission for Women (NCW)
+- State Women's Commissions
+- Local Police Women's Help Desks
+- One Stop Centres (Sakhi Centres)
+
+# OUTPUT FORMAT
+Structure responses as follows:
+
+**Direct Answer**: [Concise response to the query]
+
+**Legal Framework** (if applicable): [Relevant IPC sections, acts, or regulations with brief explanations]
+
+**Action Steps**: [Numbered list of concrete actions the user can take]
+
+**Resources**: [Relevant helplines, organizations, or support systems]
+
+**Additional Context** (optional): [Any important caveats, considerations, or related information]
+
+# RESPONSE STYLE
+- Use clear, accessible language (avoid excessive legal jargon)
+- Break complex information into digestible points
+- Balance empathy with informativeness
+- Keep responses concise but comprehensive (aim for 150-300 words unless complexity requires more)
+- Use bullet points or numbered lists for clarity when presenting multiple items"""
 
 
 def get_connection():
@@ -67,7 +143,6 @@ def ensure_table_exists():
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Table for chat threads (conversations)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS chat_threads (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,7 +152,6 @@ def ensure_table_exists():
             )
         """)
 
-        # Table for individual messages within a thread
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS messages (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -89,7 +163,6 @@ def ensure_table_exists():
             )
         """)
 
-        # Keep the old table for migration (optional)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -112,7 +185,8 @@ def ensure_table_exists():
 
 ensure_table_exists()
 
-# ----------------- REGISTER -----------------
+
+# ----------------- AUTH ENDPOINTS -----------------
 @app.post("/register")
 async def register(request: Request):
     try:
@@ -133,7 +207,6 @@ async def register(request: Request):
         return JSONResponse(status_code=500, content={"error": "Server error"})
 
 
-# ----------------- LOGIN -----------------
 @app.post("/login")
 async def login(request: Request):
     try:
@@ -153,7 +226,6 @@ async def login(request: Request):
         return JSONResponse(status_code=500, content={"error": "Server error"})
 
 
-# ----------------- FORGOT PASSWORD -----------------
 @app.post("/forgot_password")
 async def forgot_password(request: Request):
     try:
@@ -173,7 +245,7 @@ async def forgot_password(request: Request):
         return JSONResponse(status_code=500, content={"error": "Server error"})
 
 
-# Helper function to get conversation history
+# ----------------- HELPER FUNCTIONS -----------------
 def get_conversation_history(cursor, chat_id, limit=10):
     """Fetch recent conversation history for context"""
     try:
@@ -182,61 +254,63 @@ def get_conversation_history(cursor, chat_id, limit=10):
             (chat_id, limit)
         )
         messages = cursor.fetchall()
-        # Reverse to get chronological order
         return [(msg[0], msg[1]) for msg in reversed(messages)]
     except:
         return []
 
-# Helper function to build conversation context
-def build_conversation_with_rag(user_message, contexts, conversation_history):
-    """Build prompt with conversation history + RAG context (like ChatGPT)"""
+
+def build_user_prompt(user_message, contexts, conversation_history):
+    """Build structured user prompt with conversation history and RAG context"""
     
-    # Add context info
-    if contexts:
-        context_str = "\n\n".join([f"**Information {i+1}:**\n{ctx['text']}" 
-                                   for i, ctx in enumerate(contexts)])
-    else:
-        context_str = "No specific database information found."
+    prompt_parts = []
     
-    # Build conversation history for context
-    conv_history_str = ""
+    # 1. Conversation History Section
     if conversation_history:
-        conv_history_str = "CONVERSATION HISTORY:\n"
-        for role, msg in conversation_history[-5:]:  # Use last 5 messages for context
+        prompt_parts.append("# CONVERSATION HISTORY")
+        for role, msg in conversation_history[-5:]:  # Last 5 exchanges
             prefix = "User" if role == "user" else "Assistant"
-            conv_history_str += f"{prefix}: {msg}\n"
-        conv_history_str += "\n"
+            prompt_parts.append(f"{prefix}: {msg}")
+        prompt_parts.append("")  # Empty line for separation
     
-    system_prompt = """You are an expert Women's Safety Assistant for India with deep knowledge of:
-- Indian laws and legal protections for women
-- Cybercrime laws and digital safety
-- Support resources and helplines
-- Women's rights and safety measures
-
-You provide comprehensive, compassionate, and actionable advice. Always be supportive and empowering."""
+    # 2. Knowledge Base Context Section
+    if contexts:
+        prompt_parts.append("# KNOWLEDGE BASE REFERENCES")
+        prompt_parts.append("Use the following verified information from the database to inform your response:")
+        prompt_parts.append("")
+        
+        for i, ctx in enumerate(contexts, 1):
+            metadata = ctx.get('metadata', {})
+            source_type = metadata.get('type', 'general')
+            section = metadata.get('section', '')
+            
+            prompt_parts.append(f"## Source {i}: {source_type.upper()}")
+            if section:
+                prompt_parts.append(f"Section: {section}")
+            prompt_parts.append(f"Content: {ctx['text']}")
+            prompt_parts.append(f"Relevance Score: {ctx.get('score', 0):.3f}")
+            prompt_parts.append("")
+    else:
+        prompt_parts.append("# KNOWLEDGE BASE REFERENCES")
+        prompt_parts.append("No specific database matches found. Provide response based on general expertise.")
+        prompt_parts.append("")
     
-    prompt = f"""{system_prompt}
-
-{conv_history_str}
-
-VERIFIED DATABASE INFORMATION:
-{context_str}
-
-CURRENT USER QUESTION: {user_message}
-
-Instructions:
-1. Provide comprehensive answers that go beyond the database info if you have knowledge
-2. Cite specific laws, sections, or helplines when relevant
-3. For emergency situations, prioritize safety (mention 112, 100, or 1091)
-4. Be empathetic, clear, and use simple language
-5. Provide actionable steps the user can take
-6. If discussing something beyond women's safety, politely redirect
-
-Provide a thorough, helpful response:"""
+    # 3. Current User Query Section
+    prompt_parts.append("# USER QUERY")
+    prompt_parts.append(user_message)
+    prompt_parts.append("")
     
-    return prompt
+    # 4. Response Instructions
+    prompt_parts.append("# RESPONSE INSTRUCTIONS")
+    prompt_parts.append("- Answer the user query directly and comprehensively")
+    prompt_parts.append("- Incorporate relevant information from Knowledge Base References")
+    prompt_parts.append("- Maintain conversation continuity using the history provided")
+    prompt_parts.append("- Follow the OUTPUT FORMAT specified in your system instructions")
+    prompt_parts.append("- Cite specific legal sections when discussing laws")
+    
+    return "\n".join(prompt_parts)
 
-# ----------------- CHAT WITH RAG -----------------
+
+# ----------------- CHAT ENDPOINT -----------------
 @app.post("/chat")
 async def chat(request: Request):
     conn = None
@@ -245,7 +319,7 @@ async def chat(request: Request):
         data = await request.json()
         user_msg = data.get("message", "")
         user = data.get("user", "anonymous")
-        chat_id = data.get("chat_id")  # Optional for continuing a thread
+        chat_id = data.get("chat_id")
 
         if not user_msg:
             return JSONResponse(status_code=400, content={"error": "Message missing"})
@@ -269,35 +343,47 @@ async def chat(request: Request):
         )
         conn.commit()
 
-        # RAG retrieval with higher context
+        # RAG retrieval
         contexts = []
         try:
             contexts = retrieve_context(user_msg, top_k=5)
         except Exception as rag_error:
             print(f"RAG retrieval failed: {rag_error}")
 
-        # Get conversation history for context (like ChatGPT)
+        # Get conversation history
         conversation_history = get_conversation_history(cursor, chat_id, limit=10)
 
-        # Build enhanced prompt with history + RAG
-        try:
-            prompt = build_conversation_with_rag(user_msg, contexts, conversation_history)
-        except Exception as prompt_error:
-            print(f"Prompt building failed: {prompt_error}")
-            prompt = user_msg
+        # Build user prompt (now separate from system prompt)
+        user_prompt = build_user_prompt(user_msg, contexts, conversation_history)
 
-        # LLM call with conversation context
-        messages_for_llm = [
-            {"role": "user", "content": prompt}
-        ]
-        
-        response = client.chat.completions.create(
-            model=GROQ_MODEL,
-            messages=messages_for_llm,
-            temperature=0.7,
-            max_tokens=2000  # Increased for more detailed responses
-        )
-        bot_reply = response.choices[0].message.content or "Sorry, I couldn't generate a response."
+        # LLM call with properly separated system and user prompts
+        try:
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=user_prompt,  # User prompt only
+                config={
+                    "system_instruction": SYSTEM_PROMPT,  # System prompt separate
+                    "temperature": 0.7,
+                    "max_output_tokens": 2000,
+                }
+            )
+            
+            bot_reply = response.text
+                
+        except Exception as gemini_error:
+            print(f"Gemini API Error: {gemini_error}")
+            print(f"Error type: {type(gemini_error).__name__}")
+            print(f"Full traceback: {traceback.format_exc()}")
+            
+            error_msg = str(gemini_error).lower()
+            if "api key" in error_msg or "authentication" in error_msg:
+                bot_reply = "API authentication failed. Please check your GEMINI_API_KEY configuration."
+            elif "quota" in error_msg or "rate limit" in error_msg:
+                bot_reply = "API quota exceeded. Please try again later or check your API usage limits."
+            elif "not found" in error_msg or "404" in error_msg:
+                bot_reply = f"Model '{GEMINI_MODEL}' not available. Available models: gemini-2.5-flash, gemini-2.5-pro, gemini-2.0-flash"
+            else:
+                bot_reply = "I'm having trouble connecting to the AI service. Please try again."
 
         # Insert assistant reply
         cursor.execute(
@@ -306,7 +392,7 @@ async def chat(request: Request):
         )
         conn.commit()
 
-        # Prepare sources with better formatting
+        # Prepare sources
         sources = []
         for ctx in contexts[:3]:
             try:
@@ -322,9 +408,15 @@ async def chat(request: Request):
 
         return {"reply": bot_reply, "sources": sources, "chat_id": chat_id}
 
-    except Exception:
-        print(f"Chat endpoint error: {traceback.format_exc()}")
-        return JSONResponse(status_code=500, content={"error": "Chat service unavailable"})
+    except Exception as e:
+        error_msg = str(e)
+        error_type = type(e).__name__
+        print(f"Chat endpoint error ({error_type}): {error_msg}")
+        print(f"Full traceback: {traceback.format_exc()}")
+        return JSONResponse(
+            status_code=500, 
+            content={"error": f"Chat service unavailable: {error_type} - {error_msg}"}
+        )
     finally:
         if cursor:
             cursor.close()
@@ -332,7 +424,7 @@ async def chat(request: Request):
             conn.close()
 
 
-# ----------------- CHAT HISTORY -----------------
+# ----------------- CHAT HISTORY MANAGEMENT -----------------
 @app.get("/chat_history/{username}")
 async def get_chat_history(username: str):
     conn = None
@@ -341,14 +433,12 @@ async def get_chat_history(username: str):
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Get threads for user
         cursor.execute(
             "SELECT id, title, created_at FROM chat_threads WHERE user = %s ORDER BY created_at DESC",
             (username,)
         )
         threads = cursor.fetchall()
 
-        # For each thread, get messages
         for thread in threads:
             cursor.execute(
                 "SELECT role, content, timestamp FROM messages WHERE chat_id = %s ORDER BY timestamp ASC",
@@ -368,7 +458,6 @@ async def get_chat_history(username: str):
             conn.close()
 
 
-# ----------------- DELETE CHAT -----------------
 @app.delete("/delete_chat/{chat_id}")
 async def delete_chat(chat_id: int):
     conn = None
@@ -393,7 +482,6 @@ async def delete_chat(chat_id: int):
             conn.close()
 
 
-# ----------------- RENAME CHAT -----------------
 @app.put("/rename_chat/{chat_id}")
 async def rename_chat(chat_id: int, request: Request):
     conn = None
@@ -457,12 +545,55 @@ async def verify_google_login(user: str):
     return {"message": "Login successful", "user": user, "logged_in": True}
 
 
+# ----------------- UTILITY ENDPOINTS -----------------
+@app.get("/list-models")
+async def list_models():
+    """List all available Gemini models for debugging"""
+    try:
+        available = []
+        for m in client.models.list():
+            available.append({
+                "name": m.name,
+                "display_name": getattr(m, 'display_name', m.name)
+            })
+        return {
+            "current_model": GEMINI_MODEL,
+            "available_models": available,
+            "total_count": len(available)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to list models: {str(e)}"}
+        )
+
+
 # ----------------- HEALTH CHECK -----------------
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "model": GROQ_MODEL}
+    return {
+        "status": "healthy",
+        "model": GEMINI_MODEL,
+        "api_configured": bool(GEMINI_API_KEY)
+    }
+
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Women's Safety Chatbot API",
+        "version": "1.0",
+        "endpoints": {
+            "health": "/health",
+            "list_models": "/list-models",
+            "chat": "/chat",
+            "register": "/register",
+            "login": "/login"
+        }
+    }
 
 
 if __name__ == "__main__":
     import uvicorn
+    print(f"Starting server with model: {GEMINI_MODEL}")
     uvicorn.run(app, host="127.0.0.1", port=8000)
