@@ -1,10 +1,11 @@
 """
 RAG Service for Women's Safety Chatbot
-Handles vector search and context retrieval from Pinecone
+Handles vector search and context retrieval from Chroma DB
 """
 import json
 import os
-from pinecone import Pinecone, ServerlessSpec
+import chromadb
+from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 
@@ -13,38 +14,33 @@ load_dotenv()
 # ============================================
 # CONFIGURATION
 # ============================================
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX")
-PINECONE_CLOUD = "aws"
-PINECONE_REGION = os.getenv("PINECONE_ENVIRONMENT", "us-east-1")
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+COLLECTION_NAME = os.getenv("CHROMA_COLLECTION", "women_safety_data")
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # ============================================
 # INITIALIZE SERVICES (Lazy loading)
 # ============================================
-_pc = None
-_index = None
+_chroma_client = None
+_collection = None
 _embedder = None
 
-def get_pinecone_client():
-    global _pc
-    if _pc is None:
-        _pc = Pinecone(api_key=PINECONE_API_KEY)
-    return _pc
+def get_chroma_client():
+    global _chroma_client
+    if _chroma_client is None:
+        _chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
+    return _chroma_client
 
-def get_index():
-    global _index
-    if _index is None:
-        pc = get_pinecone_client()
-        if PINECONE_INDEX_NAME not in pc.list_indexes().names():
-            pc.create_index(
-                name=PINECONE_INDEX_NAME,
-                dimension=384,
-                metric="cosine",
-                spec=ServerlessSpec(cloud=PINECONE_CLOUD, region=PINECONE_REGION)
-            )
-        _index = pc.Index(PINECONE_INDEX_NAME)
-    return _index
+def get_collection():
+    global _collection
+    if _collection is None:
+        client = get_chroma_client()
+        try:
+            _collection = client.get_collection(name=COLLECTION_NAME)
+        except:
+            # Collection doesn't exist, create it
+            _collection = client.create_collection(name=COLLECTION_NAME)
+    return _collection
 
 def get_embedder():
     global _embedder
@@ -70,7 +66,7 @@ def process_helplines(helplines_data):
             "text": chunk_text,
             "metadata": {
                 "type": "national_helpline",
-                "numbers": helpline["number"],
+                "numbers": ", ".join(helpline["number"]),
                 "description": helpline["description"],
                 "timings": helpline["timings"]
             }
@@ -90,7 +86,7 @@ def process_helplines(helplines_data):
                 "metadata": {
                     "type": "state_helpline",
                     "state": state,
-                    "numbers": helpline["number"],
+                    "numbers": ", ".join(helpline["number"]),
                     "description": helpline["description"],
                     "timings": helpline["timings"]
                 }
@@ -107,7 +103,7 @@ def process_helplines(helplines_data):
             "text": chunk_text,
             "metadata": {
                 "type": "ngo",
-                "numbers": ngo["number"],
+                "numbers": ", ".join(ngo["number"]),
                 "description": ngo["description"],
                 "timings": ngo["timings"]
             }
@@ -154,85 +150,86 @@ def process_laws(laws_data):
     
     return chunks
 
-def upload_to_pinecone(chunks, batch_size=100):
-    """Generate embeddings and upload to Pinecone"""
-    index = get_index()
+def upload_to_chroma(chunks, batch_size=100):
+    """Generate embeddings and upload to Chroma DB"""
+    collection = get_collection()
     embedder = get_embedder()
-    vectors = []
-    
+
+    ids = []
+    embeddings = []
+    metadatas = []
+    documents = []
+
     for chunk in chunks:
         embedding = embedder.encode(chunk["text"]).tolist()
-        
-        vectors.append({
-            "id": chunk["id"],
-            "values": embedding,
-            "metadata": {
-                "text": chunk["text"],
-                **chunk["metadata"]
-            }
-        })
-        
-        if len(vectors) >= batch_size:
-            index.upsert(vectors=vectors)
-            print(f"Uploaded {len(vectors)} vectors")
-            vectors = []
-    
-    if vectors:
-        index.upsert(vectors=vectors)
-        print(f"Uploaded {len(vectors)} vectors")
+
+        ids.append(chunk["id"])
+        embeddings.append(embedding)
+        documents.append(chunk["text"])
+        metadatas.append(chunk["metadata"])
+
+        if len(ids) >= batch_size:
+            collection.add(
+                ids=ids,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                documents=documents
+            )
+            print(f"Uploaded {len(ids)} vectors to Chroma DB")
+            ids, embeddings, metadatas, documents = [], [], [], []
+
+    if ids:
+        collection.add(
+            ids=ids,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            documents=documents
+        )
+        print(f"Uploaded {len(ids)} vectors to Chroma DB")
 
 # ============================================
 # SETUP FUNCTION (Run once)
 # ============================================
 def setup_rag():
-    """Load data and upload to Pinecone - RUN THIS ONCE"""
+    """Load data and upload to Chroma DB - RUN THIS ONCE"""
     with open("data/helplines.json", "r", encoding="utf-8") as f:
         helplines_data = json.load(f)
-    
+
     with open("data/laws.json", "r", encoding="utf-8") as f:
         laws_data = json.load(f)
-    
+
     helpline_chunks = process_helplines(helplines_data)
     law_chunks = process_laws(laws_data)
     all_chunks = helpline_chunks + law_chunks
-    
-    upload_to_pinecone(all_chunks)
-    print(f"✅ Successfully uploaded {len(all_chunks)} chunks to Pinecone!")
+
+    upload_to_chroma(all_chunks)
+    print(f"✅ Successfully uploaded {len(all_chunks)} chunks to Chroma DB!")
 
 # ============================================
 # RETRIEVAL FUNCTIONS
 # ============================================
 def retrieve_context(query, top_k=5):
-    """Retrieve relevant context from Pinecone with multi-query strategy"""
-    index = get_index()
+    """Retrieve relevant context from Chroma DB"""
+    collection = get_collection()
     embedder = get_embedder()
-    
-    # Collect results from original query
-    all_results = {}
-    
+
     query_embedding = embedder.encode(query).tolist()
-    
-    results = index.query(
-        vector=query_embedding,
-        top_k=top_k,
-        include_metadata=True
+
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=top_k,
+        include=['metadatas', 'documents', 'distances']
     )
-    
-    for match in results['matches']:
-        match_id = match['id']
-        all_results[match_id] = {
-            "text": match['metadata']['text'],
-            "score": match['score'],
-            "metadata": match['metadata']
-        }
-    
-    # Sort by score and return top results
-    sorted_results = sorted(all_results.values(), key=lambda x: x['score'], reverse=True)
-    
+
     contexts = []
-    for result in sorted_results[:top_k]:
-        contexts.append(result)
-    
+    if results['documents'] and results['metadatas'] and results['distances']:
+        for i in range(len(results['documents'][0])):
+            contexts.append({
+                "text": results['documents'][0][i],
+                "score": 1 - results['distances'][0][i],  # Convert distance to similarity score
+                "metadata": results['metadatas'][0][i]
+            })
+
     return contexts
 
 def build_rag_prompt(user_message, contexts):
@@ -273,19 +270,19 @@ Your Response:"""
 # MAIN TESTING
 # ============================================
 if __name__ == "__main__":
-    # Uncomment to upload data to Pinecone (run once)
+    # Uncomment to upload data to Chroma DB (run once)
     setup_rag()
-    
+
     # Test retrieval
     test_query = "What helplines are available in Kerala for domestic violence?"
     contexts = retrieve_context(test_query, top_k=3)
-    
+
     print("Query:", test_query)
     print("\nRetrieved Contexts:")
     for i, ctx in enumerate(contexts, 1):
         print(f"\n{i}. Score: {ctx['score']:.3f}")
         print(f"   {ctx['text'][:200]}...")
-    
+
     print("\n" + "="*50)
     print("\nEnhanced Prompt:")
     print(build_rag_prompt(test_query, contexts))
