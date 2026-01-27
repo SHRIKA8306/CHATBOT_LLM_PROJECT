@@ -142,22 +142,9 @@ def render_chat_from_history():
                         st.session_state.edit_text = ""
                         st.rerun()
 
-            # ---------- NORMAL MODE ----------
+           # ---------- NORMAL MODE ----------
             else:
                 st.markdown(chat.get("content", ""))
-                
-                if role == "assistant" and i in st.session_state.sources:
-                    sources = st.session_state.sources[i]
-                    if sources:
-                        with st.expander("📚 Sources & References", expanded=False):
-                            for j, source in enumerate(sources, 1):
-                                st.markdown(f"""
-**Reference {j}:** {source.get('section', source.get('type', 'N/A'))}
-- **Type:** {source.get('type', 'Unknown')}
-- **Relevance Score:** {source.get('relevance', 'N/A')}
-- **Info:** {source.get('text', 'N/A')}
-                                """)
-
                 if role == "user":
                     with st.container():
                         spacer, col_copy, col_edit = st.columns([10, 1, 1])
