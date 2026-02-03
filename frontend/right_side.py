@@ -1,7 +1,7 @@
 import streamlit as st
 
 def show_right_sidebar():
-    
+    st.markdown('<div class="right-sidebar-container">', unsafe_allow_html=True)
 
     st.markdown("### Women's Safety Resources")
 
