@@ -221,25 +221,26 @@ def _apply_main_styles():
         """
         <style>
         :root{
-          --ws-text: #000000;
-          --ws-muted: #666666;
+          --ws-text: #000000; /* Black color for text */
+          --ws-muted: rgba(75, 63, 114, 0.55);
 
-          --bg-main: #FFFFFF;
-          --sidebar-bg: #F8F8F8;
+          --pastel-pink: #F8E1F4;
+          --pastel-lav: #E3D7F7;
+          --pastel-blue: #D6EAF8;
           --white: #FFFFFF;
 
-          --border-solid: #EEEEEE;
-          --border-dark: #000000;
-          --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+          --border-soft: rgba(75, 63, 114, 0.10);
+          --shadow: 0 8px 24px rgba(75, 63, 114, 0.08);
 
           /* Bottom/chat theme */
-          --chat-input-bg: #FFFFFF;
-          --chat-input-border: #E0E0E0;
+          --bottom-1: rgba(253, 228, 234, 0.96); /* blush */
+          --bottom-2: rgba(230, 218, 248, 0.96); /* gold */
+          --bottom-border: rgba(255,218,185,0.22); /* gold */
+          --chat-input-bg: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%); /* keep gradient to match page */
         }
 
         html, body, [data-testid="stAppViewContainer"], .stApp {
-          background-color: var(--bg-main) !important;
-          background-image: none !important;
+          background: linear-gradient(120deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
           min-height: 100vh !important;
         }
 
@@ -259,23 +260,28 @@ def _apply_main_styles():
 
         /* ===== Headings ===== */
         h1, h2 {
-          color: #000000 !important;
-          background: none !important;
-          -webkit-background-clip: initial !important;
-          background-clip: initial !important;
-          font-weight: 800 !important;
+          color: var(--pastel-lav) !important;
         }
-        h3, h4, h5, h6 { color: #000000 !important; font-weight: 700 !important; }
+        h3, h4, h5, h6 {
+          color: var(--pastel-blue) !important;
+        }
 
-        /* Remove sidebar toggle + its reserved space */
-        div[data-testid="collapsedControl"],
-        div[data-testid="stSidebarCollapseButton"]{
-          display: none !important;
-          height: 0 !important;
-          width: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
+        /* ===== Headings ===== */
+        h1, h2{
+          background: linear-gradient(90deg, var(--pastel-pink), var(--pastel-blue));
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent !important;
+          letter-spacing: 0.2px;
         }
+        h3, h4, h5, h6{ color: var(--pastel-lav) !important; }
+
+        /* Ensure sidebar is visible in main/chat mode */
+        [data-testid="stSidebar"] {
+          display: flex !important;
+        }
+
+        /* Sidebar Navigation Items */
        
 
         /* =========================================================
@@ -283,13 +289,11 @@ def _apply_main_styles():
            ========================================================= */
         [data-testid="stSidebar"],
         [data-testid="stSidebarContent"]{
-          background-color: var(--sidebar-bg) !important;
-          background-image: none !important;
-          border-right: 1px solid var(--border-solid) !important;
-          padding-top: 1.5rem !important;
+          background: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
+          padding-top: 1rem !important;        /* CHANGED: from 0 to 1rem */
           padding-bottom: 0 !important;
-          padding-left: 1rem !important;
-          padding-right: 1rem !important;
+          padding-left: 1rem !important;       /* ADDED: explicit left padding */
+          padding-right: 1rem !important;      /* ADDED: explicit right padding */
           margin: 0 !important;
         }
           [data-testid="stSidebar"] *{
@@ -338,57 +342,65 @@ def _apply_main_styles():
           width: 100%;
           text-align: left !important;
           justify-content: flex-start !important;
-          border-radius: 10px !important;
-          padding: 10px 14px !important;
-          border: 1px solid transparent !important;
+          border-radius: 12px !important;
+          padding: 12px 14px !important;
+          border: none !important;
           background: var(--white) !important;
           color: var(--ws-text) !important;
-          font-size: 14px !important;
+          font-size: 15px !important;
           height: auto !important;
-          margin: 4px 0 !important;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-          transition: all 0.2s ease;
+          margin: 0 !important;
+          box-shadow: 0 2px 8px rgba(75, 63, 114, 0.07);
+          transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, background 140ms ease;
         }
         [data-testid="stSidebar"] .stButton > button:hover{
-          background: #eeeeee !important;
-          border: 1px solid #dddddd !important;
+          background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-blue)) !important;
+          color: var(--ws-text) !important;
         }
 
         .ws-sidebar-footer{
           position: sticky;
           bottom: 0;
-          padding: 15px 0;
-          background: var(--sidebar-bg);
-          border-top: 1px solid var(--border-solid);
+          padding-top: 0px;
+          padding-bottom: 0px;
+          margin-top: 0px;
+          background: linear-gradient(180deg, rgba(255,232,244,0.0), rgba(255,232,244,0.92));
+          backdrop-filter: blur(10px);
+          border-top: 1px solid rgba(232, 74, 159, 0.18);
           z-index: 5;
         }
 
         .ws-sidebar-footer .stButton > button{
-          background: #000000 !important;
-          color: #FFFFFF !important;
-          border-radius: 10px !important;
-          height: 44px !important;
-          font-size: 15px !important;
-          font-weight: 600 !important;
+          text-align: center !important;
+          justify-content: center !important;
+          font-weight: 700 !important;
+          border: none !important;
+          background: linear-gradient(90deg, var(--peach), var(--lav)) !important;
+          color: var(--ws-text) !important;
+          border-radius: 30px !important;
+          height: 50px !important;
+          font-size: 17px !important;
+          box-shadow: none !important;
         }
 
         /* Main page buttons */
         .stButton > button{
-          background: #000000 !important;
-          color: #FFFFFF !important;
-          border-radius: 10px !important;
-          height: 44px !important;
-          font-size: 15px !important;
-          font-weight: 600 !important;
+          background: linear-gradient(90deg, var(--pastel-pink), var(--pastel-blue)) !important;
+          color: var(--ws-text) !important;
+          border-radius: 30px !important;
+          height: 50px !important;
+          font-size: 17px !important;
+          font-weight: 700 !important;
           border: none !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          transition: all 0.2s ease;
-          padding: 0 25px !important;
+          box-shadow: 0 8px 24px rgba(75, 63, 114, 0.08);
+          transition: 0.3s ease;
+          padding: 25px !important;
         }
         .stButton > button:hover {
-          background: #333333 !important;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+          background: linear-gradient(90deg, var(--pastel-blue), var(--pastel-pink));
+          box-shadow: 0 8px 32px rgba(75, 63, 114, 0.18);
+          transform: scale(1.04);
+          color: var(--ws-text) !important;
         }
 
         /* Chat bubbles */
@@ -440,22 +452,14 @@ def _apply_main_styles():
           box-sizing: border-box !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="user"] > div{
-          background: #000000 !important;
-          color: #FFFFFF !important;
+          background: rgba(255, 255, 255, 0.95) !important;
           margin-left: auto !important;
-          border: none !important;
-        }
-        [data-testid="stChatMessage"][data-st-chat-message="user"] * {
-          color: #FFFFFF !important;
+          border: 1px solid var(--lav) !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="assistant"] > div{
-          background: #F3F3F3 !important;
-          color: #000000 !important;
+          background: rgba(246, 242, 255, 0.65) !important;
           margin-right: auto !important;
-          border: 1px solid #EEEEEE !important;
-        }
-        [data-testid="stChatMessage"][data-st-chat-message="assistant"] * {
-          color: #000000 !important;
+          border: 1px solid var(--lav) !important;
         }
 
         /* =========================================================
@@ -477,8 +481,7 @@ def _apply_main_styles():
           /* Use a single solid color behind the chat input across the page */
           background: var(--chat-input-bg) !important;
           border: none !important;
-          border-top: 1px solid var(--chat-input-border) !important;
-          box-shadow: 0 -2px 10px rgba(0,0,0,0.02) !important;
+          box-shadow: none !important;
           width: 100% !important;
           max-width: 100% !important;
           padding: 12px 24px !important;
@@ -555,57 +558,33 @@ def _apply_main_styles():
 
 /* Target Save & Cancel buttons INSIDE chat */
 [data-testid="stChatMessage"] .stButton > button {
-  background: #000000 !important;
-  color: #FFFFFF !important;
-  font-weight: 600 !important;
-  padding: 8px 18px !important;
-  border-radius: 8px !important;
+  background: linear-gradient(
+    135deg,
+    var(--pastel-pink),
+    var(--pastel-lav),
+    var(--pastel-blue)
+  ) !important;
+
+  color: var(--ws-text) !important;
+  font-weight: 700 !important;
+  padding: 10px 28px !important;
+  border-radius: 22px !important;
   border: none !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 6px 16px rgba(75, 63, 114, 0.18) !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
   white-space: nowrap !important;
 }
 
 /* Hover effect */
 [data-testid="stChatMessage"] .stButton > button:hover {
-  background: #333333 !important;
-  transform: translateY(-1px);
+  transform: scale(1.06);
+  box-shadow: 0 10px 26px rgba(75, 63, 114, 0.28) !important;
 }
 [data-testid="stChatMessage"] > div {
   position: relative !important;
 }
 
-/* ===== RIGHT SIDEBAR STYLING ===== */
-.right-sidebar-container {
-    background-color: #F9F9F9 !important;
-    padding: 20px !important;
-    border-radius: 16px !important;
-    border: 1px solid #EEEEEE !important;
-    min-height: 400px !important;
-    margin-top: 10px !important;
-}
-
-/* Style for expanders in right sidebar */
-.right-sidebar-container .stExpander {
-    background-color: #FFFFFF !important;
-    border: 1px solid #EEEEEE !important;
-    border-radius: 8px !important;
-    margin-bottom: 10px !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
-}
-
-.right-sidebar-container .stExpander details {
-    border: none !important;
-}
-
-/* Ensure headings inside right sidebar are black */
-.right-sidebar-container h3 {
-    color: #000000 !important;
-    font-size: 18px !important;
-    margin-bottom: 15px !important;
-    font-weight: 700 !important;
-}
         </style>
         """,
         unsafe_allow_html=True
