@@ -190,119 +190,116 @@ def load_history_chat(history_id: str, history_list: list):
 
 # ---------------- LOGIN / REGISTER ----------------
 if not st.session_state.logged_in:
-    col1, col2, col3 = st.columns([1, 2, 1])
-
-    with col2:
-        img_base64 = base64.b64encode(open("logo.png", "rb").read()).decode()
+    # Use columns to center the content - styling will target the middle column
+    dl, dc, dr = st.columns([1, 1.2, 1]) 
+    
+    with dc:
+        # Marker for finding this column in CSS
+        st.markdown('<div class="login-box-marker"></div>', unsafe_allow_html=True)
+        
+        # 1. Header (Centered Text Only)
         st.markdown(
-            f"""
-            <div style="
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                margin-top:20px;
-                margin-bottom:20px;
-                gap:16px;
-            ">
-                <img src="data:image/jpeg;base64,{img_base64}"
-                     style="width:150px;height:150px;object-fit:cover;border-radius:20px;" />
-                <div>
-                    <h1 style="margin:0;">Women Safety Assistant</h1>
-                    <p style="margin:0;color:#555;">Your trusted legal & safety companion</p>
-                </div>
+            """
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <div style="font-size: 30px; font-weight: 800; color: black; line-height: 1.1; margin-bottom: 4px;">Women Safety Assistant</div>
+                <div style="font-size: 15px; color: #666; line-height: 1.2;">Your trusted legal & safety companion</div>
             </div>
-            """,
-            unsafe_allow_html=True
+            """, unsafe_allow_html=True
         )
 
-        if st.button("🔐 Login with Google", use_container_width=True, type="primary"):
-            try:
-                res = requests.get(f"{API_BASE_URL}/auth/google")
-                if res.status_code == 200:
-                    auth_url = res.json()["auth_url"]
-                    st.markdown(f'[Click here to continue Google login]({auth_url})')
-                else:
-                    st.error("Backend error - check if backend is running on port 8000")
-            except:
-                st.error("Backend not running. Start with: `uvicorn backend:app --host 127.0.0.1 --port 8000`")
-
-        st.markdown("---")
-        st.caption("OR use username/password:")
-
+        # 2. Section Title "Login"
         if st.session_state.auth_mode == "login":
-            st.subheader("Login")
-            login_username = st.text_input("Username", key="login_username")
-            login_password = st.text_input("Password", type="password", key="login_password")
-
-            col_login, col_register = st.columns(2)
-
-            with col_login:
+            # Removed redundant Login header if using the side-by-side header
+            
+            # 3. Inputs
+            l_user = st.text_input("Username", key="l_user", placeholder="")
+            l_pass = st.text_input("Password", type="password", key="l_pass", placeholder="")
+            
+            # 4. Action Row: [Login] [Create Account]
+            col_btn1, col_btn2 = st.columns(2, vertical_alignment="bottom")
+            
+            with col_btn1:
                 if st.button("Login", use_container_width=True):
-                    res = requests.post(
-                        f"{API_BASE_URL}/login",
-                        json={"username": login_username, "password": login_password}
-                    )
-                    if res.status_code == 200:
+                     res = requests.post(f"{API_BASE_URL}/login", json={"username": l_user, "password": l_pass})
+                     if res.status_code == 200:
                         data = res.json()
-                        email = data.get("email") or login_username
+                        email = data.get("email") or l_user
                         st.session_state.logged_in = True
                         st.session_state.username = email
-                        if login_username and "@" not in login_username:
-                            st.session_state.display_name = login_username
-                        else:
-                            st.session_state.display_name = _format_display_name(email)
+                        st.session_state.display_name = l_user if "@" not in l_user else _format_display_name(email)
                         st.session_state.selected_history = None
                         _set_qp(logged_in="1", user=email, name=st.session_state.display_name)
                         st.rerun()
-                    else:
-                        st.error("Invalid login details")
+                     else:
+                        st.error("Invalid credentials")
 
-            with col_register:
+            with col_btn2:
                 if st.button("Create Account", use_container_width=True):
                     st.session_state.auth_mode = "register"
                     st.rerun()
-
+            
+            # 5. Forgot Password (Full width below buttons)
             if st.button("Forgot Password?", use_container_width=True):
                 st.session_state.forgot_mode = True
+                st.rerun()
 
+            st.markdown('<div style="font-size: 18px; font-weight: 500; color: black; text-align:center; margin-top: 0.5rem; margin-bottom: 0.5rem;">Or</div>', unsafe_allow_html=True)
+            
+            # 6. Google Login (Full Width at bottom)
+            st.markdown('<div class="google-btn-container">', unsafe_allow_html=True)
+            if st.button("Login with Google", use_container_width=True, key="google_login_main"):
+                try:
+                    res = requests.get(f"{API_BASE_URL}/auth/google")
+                    if res.status_code == 200:
+                        auth_url = res.json()["auth_url"]
+                        st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
+                    else:
+                        st.error("Connection error")
+                except:
+                    st.error("Backend not running")
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Forgot Password Handling
             if st.session_state.forgot_mode:
-                new_password = st.text_input("New Password", type="password", key="new_password")
-                if st.button("Reset Password", use_container_width=True):
-                    res = requests.post(
-                        f"{API_BASE_URL}/forgot_password",
-                        json={"username": login_username, "new_password": new_password}
-                    )
-                    if res.status_code == 200:
-                        st.success("Password updated successfully")
+                st.markdown('<div style="font-size: 20px; font-weight: 700; color: black; margin-top: 1rem; margin-bottom: 0.5rem;">Reset Password</div>', unsafe_allow_html=True)
+                f_user = st.text_input("Username for Reset", key="f_user")
+                f_new = st.text_input("New Password", type="password", key="f_new")
+                
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    if st.button("Update Password", use_container_width=True):
+                        requests.post(f"{API_BASE_URL}/forgot_password", json={"username": f_user, "new_password": f_new})
+                        st.success("Password updated!")
                         st.session_state.forgot_mode = False
-                    else:
-                        st.error("Reset failed")
-
-        else:
-            st.subheader("Register")
-            reg_username = st.text_input("Username", key="reg_username")
-            reg_email = st.text_input("Email", key="reg_email")
-            reg_password = st.text_input("Password", type="password", key="reg_password")
-
-            col_register, col_back = st.columns(2)
-
-            with col_register:
-                if st.button("Register", use_container_width=True):
-                    res = requests.post(
-                        f"{API_BASE_URL}/register",
-                        json={"username": reg_username, "email": reg_email, "password": reg_password}
-                    )
-                    if res.status_code == 200:
-                        st.success("Account created successfully")
-                        st.session_state.auth_mode = "login"
                         st.rerun()
-                    else:
-                        st.error("User already exists")
+                with col2:
+                    if st.button("Cancel", use_container_width=True, key="cancel_reset"): 
+                        st.session_state.forgot_mode = False
+                        st.rerun()
 
-            with col_back:
-                if st.button("Back to Login", use_container_width=True):
-                    st.session_state.auth_mode = "login"
-                    st.rerun()
+        # --- REGISTER MODE ---
+        else:
+            st.markdown('<div style="font-size: 20px; font-weight: 700; color: black; margin-bottom: 15px;">Create Account</div>', unsafe_allow_html=True)
+            r_user = st.text_input("Username", key="r_user")
+            r_email = st.text_input("Email", key="r_email")
+            r_pass = st.text_input("Password", type="password", key="r_pass")
+            
+            st.write("")
+            
+            col_r1, col_r2 = st.columns(2)
+            with col_r1:
+                 if st.button("Register", use_container_width=True):
+                     res = requests.post(f"{API_BASE_URL}/register", json={"username": r_user, "email": r_email, "password": r_pass})
+                     if res.status_code == 200:
+                         st.success("Created! Please login.")
+                         st.session_state.auth_mode = "login"
+                         st.rerun()
+                     else:
+                         st.error("Failed")
+            with col_r2:
+                 if st.button("Back to Login", use_container_width=True):
+                     st.session_state.auth_mode = "login"
+                     st.rerun()
 
 # ---------------- LOGGED IN UI ----------------
 else:
@@ -417,8 +414,6 @@ else:
 
     # Disable chat input while editing
     chat_disabled = st.session_state.get("editing") is not None
-    if chat_disabled:
-        st.info("✏️ Finish editing the message first (click Save or Cancel)")
     
     user_input = st.chat_input(
         "Ask about laws, safety, or emergencies...",

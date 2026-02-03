@@ -1,6 +1,222 @@
 import streamlit as st
 
 def apply_styles():
+    """
+    Applies CSS based on the login state.
+    - If NOT logged in: Apply strict Black & White theme (Login Page).
+    - If logged in: Apply original Pastel theme (Chatbot Page).
+    """
+    if st.session_state.get("logged_in", False):
+        _apply_main_styles()
+    else:
+        _apply_login_styles()
+
+def _apply_login_styles():
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #FFFFFF;
+            --card-bg: #FFFFFF;
+            --text-main: #000000;
+            --button-bg: #000000;
+            --button-text: #FFFFFF;
+            --input-bg: #F3F3F3;
+        }
+
+        html, body, [data-testid="stAppViewContainer"], .stApp {
+            background-color: var(--bg-color) !important;
+            font-family: 'Inter', sans-serif !important;
+            color: var(--text-main) !important;
+        }
+        
+        /* Force white background on everything in login mode */
+        [data-testid="stAppViewContainer"] {
+            background: #FFFFFF !important;
+        }
+
+        div[data-testid="stColumn"]:has(div.login-box-marker) {
+            background-color: var(--card-bg);
+            padding: 25px 40px !important; /* Slightly more compact internal padding */
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.04);
+            
+            /* FIXED DIMENSIONS to prevent jumping */
+            min-height: 520px !important; /* Reduced to fit without scrolling */
+            width: 100% !important;
+            max-width: 420px !important;
+            margin: 0.5rem auto 0 auto !important; /* Reduced margin-top to 0.5rem */
+            
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+        }
+        
+        div[data-testid="stColumn"]:has(div.login-box-marker) > div {
+             height: 100% !important;
+             justify-content: flex-start !important;
+             align-items: stretch !important;
+             padding-top: 0 !important; /* Pull content to top */
+             margin-top: 0 !important;
+        }
+
+        /* Scoped reset for vertical blocks inside the login box to remove top gaps */
+        div[data-testid="stColumn"]:has(div.login-box-marker) div[data-testid="stVerticalBlock"] {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        /* ADDED: Logo and Title Container - Remove top spacing */
+        .logo-title-container {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            margin-bottom: 0.8rem !important;  /* CHANGED: Reduced from 1rem to 0.8rem */
+        }
+
+        /* ADDED: Reduce spacing after logo/title section */
+        div[data-testid="stColumn"]:has(div.login-box-marker) .stMarkdown {
+            margin-bottom: 0.3rem !important;  /* CHANGED: Reduced from 0.5rem to 0.3rem */
+        }
+
+        /* ADDED: Control spacing for text inputs */
+        .stTextInput {
+            margin-top: 0.1rem !important;
+            margin-bottom: 0.2rem !important;
+        }
+
+        /* Input Fields */
+        div[data-baseweb="input"] {
+            border: none !important;
+            background-color: transparent !important;
+        }
+        .stTextInput > div > div {
+             background-color: var(--input-bg) !important;
+             border-radius: 12px !important;
+             border: 1px solid transparent !important;
+        }
+        .stTextInput > div > div > input {
+            background-color: transparent !important;
+            border: none !important;
+            color: black !important;
+            padding: 8px 15px !important;
+            height: 42px !important; /* Slightly clearer input */
+            font-size: 14px !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        /* Focus State - Target the wrapper div, not the input itself */
+        .stTextInput > div:first-child > div:first-child:focus-within {
+            background-color: #FFFFFF !important;
+            border: 1px solid black !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        .stTextInput label {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: black !important;
+            margin-bottom: 2px !important;
+        }
+
+        /* BUTTONS - Pill Shaped & Black - REDUCED HEIGHT */
+        .stButton > button {
+            background-color: black !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 10px !important; /* Pill shape */
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            height: 40px !important; /* Reduced Height */
+            width: 100% !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+            transition: transform 0.1s ease;
+            margin-top: 0.1rem !important;
+            margin-bottom: 0.1rem !important;
+        }
+        .stButton > button:hover {
+            transform: scale(1.02);
+            background-color: #222 !important;
+        }
+        
+        /* Secondary / Google Button - Grey to differentiate */
+        .google-btn-container button {
+             background-color: #EEEEEE !important;
+             color: black !important;
+             box-shadow: none !important;
+        }
+        .google-btn-container button:hover {
+             background-color: #E0E0E0 !important;
+        }
+
+        /* Simple Text Styling */
+        .login-header {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .login-sub {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        /* Hide sidebar on Login */
+        [data-testid="stSidebar"] { display: none !important; }
+        div[data-testid="collapsedControl"] { display: none !important; }
+        
+        /* App Container */
+        .main .block-container {
+            padding-top: 0rem !important;      /* CHANGED: from 1rem to 0rem - removes top space */
+            padding-bottom: 2rem !important;   /* ADDED: explicit bottom padding */
+            padding-left: 1rem !important;     /* ADDED: explicit left padding */
+            padding-right: 1rem !important;    /* ADDED: explicit right padding */
+            max-width: 1000px !important;      /* CHANGED: from 900px to 1000px */
+            margin-top: 0 !important;          /* ADDED: Force no top margin */
+        }
+        
+        /* ADDED: Remove ALL top spacing from containers */
+        .main > div:first-child {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        
+        .main > div:first-child > div:first-child {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        
+        /* ADDED: Remove top spacing from main container */
+        .main {
+            padding-top: 0 !important;
+        }
+        
+        header { 
+            visibility: hidden !important;     /* CHANGED: added !important */
+            height: 0 !important;              /* ADDED: collapse header height */
+            padding: 0 !important;             /* ADDED: remove all padding */
+            margin: 0 !important;              /* ADDED: remove all margin */
+        }
+        
+        /* ADDED: Hide Streamlit toolbar */
+        [data-testid="stToolbar"] {
+            display: none !important;
+        }
+
+        /* ADDED: Ensure no extra spacing at top of app */
+        [data-testid="stAppViewContainer"] > div:first-child {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+def _apply_main_styles():
     st.markdown(
         """
         <style>
@@ -30,8 +246,10 @@ def apply_styles():
 
         .main .block-container{
           max-width: 1200px;
-          padding-top: 0rem !important;
+          padding-top: 1rem !important;        /* CHANGED: from 0rem to 1rem */
           padding-bottom: 1.2rem !important;
+          padding-left: 2rem !important;       /* ADDED: explicit left padding */
+          padding-right: 2rem !important;      /* ADDED: explicit right padding */
         }
 
         /* ===== Default text ===== */
@@ -73,8 +291,10 @@ def apply_styles():
         [data-testid="stSidebar"],
         [data-testid="stSidebarContent"]{
           background: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
-          padding-top: 0 !important;
+          padding-top: 1rem !important;        /* CHANGED: from 0 to 1rem */
           padding-bottom: 0 !important;
+          padding-left: 1rem !important;       /* ADDED: explicit left padding */
+          padding-right: 1rem !important;      /* ADDED: explicit right padding */
           margin: 0 !important;
         }
           [data-testid="stSidebar"] *{
