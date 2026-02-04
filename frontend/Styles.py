@@ -26,6 +26,13 @@ def _apply_login_styles():
             --input-bg: #F3F3F3;
         }
 
+        img {
+            width: 120px;
+            height: auto;
+            display: block;
+            margin: 0 auto 1rem auto;
+        }
+
         html, body, [data-testid="stAppViewContainer"], .stApp {
             background-color: var(--bg-color) !important;
             font-family: 'Inter', sans-serif !important;
@@ -109,8 +116,8 @@ def _apply_login_styles():
         /* Focus State - Target the wrapper div, not the input itself */
         .stTextInput > div:first-child > div:first-child:focus-within {
             background-color: #FFFFFF !important;
-            border: 1px solid black !important;
-            box-shadow: none !important;
+            border: 1px solid #A855F7 !important;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2) !important;
             outline: none !important;
         }
         .stTextInput label {
@@ -120,34 +127,40 @@ def _apply_login_styles():
             margin-bottom: 2px !important;
         }
 
-        /* BUTTONS - Pill Shaped & Black - REDUCED HEIGHT */
+        /* BUTTONS - Pill Shaped & Vibrant Purple Gradient - REDUCED HEIGHT */
         .stButton > button {
-            background-color: black !important;
-            color: white !important;
+            background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+            color: #FFFFFF !important;
             border: none !important;
-            border-radius: 10px !important; /* Pill shape */
+            border-radius: 12px !important; /* Slightly more rounded */
             font-weight: 600 !important;
-            font-size: 13px !important;
-            height: 40px !important; /* Reduced Height */
+            font-size: 14px !important;
+            height: 48px !important; /* Increased height to match image */
             width: 100% !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
-            transition: transform 0.1s ease;
+            box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2) !important;
+            transition: all 0.2s ease;
             margin-top: 0.1rem !important;
             margin-bottom: 0.1rem !important;
         }
         .stButton > button:hover {
             transform: scale(1.02);
-            background-color: #222 !important;
+            filter: brightness(1.1);
+            box-shadow: 0 6px 15px rgba(147, 51, 234, 0.3) !important;
         }
         
-        /* Secondary / Google Button - Grey to differentiate */
+        /* Secondary / Google Button - Now using theme color to match user request */
         .google-btn-container button {
-             background-color: #EEEEEE !important;
-             color: black !important;
-             box-shadow: none !important;
+             background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+             color: #FFFFFF !important;
+             box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2) !important;
         }
         .google-btn-container button:hover {
-             background-color: #E0E0E0 !important;
+             filter: brightness(1.1);
+             transform: scale(1.02);
+        }
+        /* Ensure specific overrides for button contents */
+        .google-btn-container button * {
+             color: #FFFFFF !important;
         }
 
         /* Simple Text Styling */
@@ -220,65 +233,66 @@ def _apply_main_styles():
     st.markdown(
         """
         <style>
+        /* VERSION: 2024-UPDATE-V4 - FIXED CHAT INPUT & TEXT WRAPPING */
         :root{
-          --ws-text: #000000; /* Black color for text */
-          --ws-muted: rgba(75, 63, 114, 0.55);
+          --ws-text: #000000;
+          --ws-muted: #666666;
 
-          --pastel-pink: #F8E1F4;
-          --pastel-lav: #E3D7F7;
-          --pastel-blue: #D6EAF8;
+          --bg-main: #FFFFFF;
+          --sidebar-bg: #FFFFFF;
           --white: #FFFFFF;
 
-          --border-soft: rgba(75, 63, 114, 0.10);
-          --shadow: 0 8px 24px rgba(75, 63, 114, 0.08);
+          --border-soft: #E5E5E5;
+          --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 
           /* Bottom/chat theme */
-          --bottom-1: rgba(253, 228, 234, 0.96); /* blush */
-          --bottom-2: rgba(230, 218, 248, 0.96); /* gold */
-          --bottom-border: rgba(255,218,185,0.22); /* gold */
-          --chat-input-bg: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%); /* keep gradient to match page */
+          --chat-input-bg: #FFFFFF;
+          --chat-input-border: #E0E0E0;
         }
 
         html, body, [data-testid="stAppViewContainer"], .stApp {
-          background: linear-gradient(120deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
+          background-color: var(--bg-main) !important;
+          background-image: none !important;
           min-height: 100vh !important;
         }
 
         .main .block-container{
           max-width: 1200px;
-          padding-top: 1rem !important;        /* CHANGED: from 0rem to 1rem */
+          padding-top: 1.5rem !important; 
           padding-bottom: 1.2rem !important;
-          padding-left: 2rem !important;       /* ADDED: explicit left padding */
-          padding-right: 2rem !important;      /* ADDED: explicit right padding */
+          padding-left: 2rem !important;
+          padding-right: 2rem !important;
         }
 
-        /* ===== Default text ===== */
-        [data-testid="stAppViewContainer"] * { color: var(--ws-text) !important; }
+        /* ===== Typography - Professional B&W ===== */
+        [data-testid="stAppViewContainer"] * { color: #000000 !important; }
+        
+        h1, h2, h3, h4, h5, h6 { 
+          color: #000000 !important; 
+          font-weight: 700 !important; 
+          background: none !important;
+          -webkit-background-clip: initial !important;
+          background-clip: initial !important;
+          margin-top: 0.5rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+        
         [data-testid="stCaptionContainer"], .stCaptionContainer, small {
-          color: var(--ws-muted) !important;
+          color: #666666 !important;
+          font-size: 0.85rem !important;
         }
 
-        /* ===== Headings ===== */
-        h1, h2 {
-          color: var(--pastel-lav) !important;
-        }
-        h3, h4, h5, h6 {
-          color: var(--pastel-blue) !important;
-        }
-
-        /* ===== Headings ===== */
-        h1, h2{
-          background: linear-gradient(90deg, var(--pastel-pink), var(--pastel-blue));
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent !important;
-          letter-spacing: 0.2px;
-        }
-        h3, h4, h5, h6{ color: var(--pastel-lav) !important; }
-
-        /* Ensure sidebar is visible in main/chat mode */
+        /* Ensure sidebar is distinct and visible in main view */
         [data-testid="stSidebar"] {
           display: flex !important;
+          visibility: visible !important;
+          border-right: 1px solid #D1D5DB !important;
+          box-shadow: 2px 0 10px rgba(0,0,0,0.02) !important;
+          width: 320px !important; /* Increased Breadth */
+          min-width: 320px !important;
+        }
+        [data-testid="stSidebarContent"] {
+          background-color: #FFFFFF !important;
         }
 
         /* Sidebar Navigation Items */
@@ -289,11 +303,13 @@ def _apply_main_styles():
            ========================================================= */
         [data-testid="stSidebar"],
         [data-testid="stSidebarContent"]{
-          background: linear-gradient(135deg, var(--pastel-pink) 0%, var(--pastel-lav) 60%, var(--pastel-blue) 100%) !important;
-          padding-top: 1rem !important;        /* CHANGED: from 0 to 1rem */
+          background-color: var(--sidebar-bg) !important;
+          background-image: none !important;
+          border-right: 1px solid var(--border-soft) !important;
+          padding-top: 1.5rem !important;
           padding-bottom: 0 !important;
-          padding-left: 1rem !important;       /* ADDED: explicit left padding */
-          padding-right: 1rem !important;      /* ADDED: explicit right padding */
+          padding-left: 1rem !important;
+          padding-right: 1rem !important;
           margin: 0 !important;
         }
           [data-testid="stSidebar"] *{
@@ -338,69 +354,237 @@ def _apply_main_styles():
           margin-top: 0 !important;
         }
 
-        [data-testid="stSidebar"] .stButton > button{
-          width: 100%;
+        /* ===== FIXED: Sidebar History Items - PROPER TEXT WRAPPING ===== */
+        [data-testid="stSidebar"] div[data-testid="column"] .stButton > button {
+          width: 100% !important;
+          max-width: 220px !important; /* Constrain button width */
           text-align: left !important;
           justify-content: flex-start !important;
-          border-radius: 12px !important;
-          padding: 12px 14px !important;
+          border-radius: 8px !important;
+          padding: 8px 12px !important;
           border: none !important;
-          background: var(--white) !important;
-          color: var(--ws-text) !important;
-          font-size: 15px !important;
-          height: auto !important;
-          margin: 0 !important;
-          box-shadow: 0 2px 8px rgba(75, 63, 114, 0.07);
-          transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, background 140ms ease;
-        }
-        [data-testid="stSidebar"] .stButton > button:hover{
-          background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-blue)) !important;
-          color: var(--ws-text) !important;
+          background-color: transparent !important;
+          color: #000000 !important;
+          font-size: 14px !important;
+          font-weight: 400 !important;
+          min-height: 40px !important;
+          height: auto !important; /* Allow height to grow */
+          margin: 1px 0 !important;
+          box-shadow: none !important;
+          transition: all 0.2s ease;
+          overflow: hidden !important; /* Contain overflow */
+          display: flex !important;
+          align-items: flex-start !important; /* Align to top for multiline */
+          white-space: normal !important; /* Allow wrapping */
+          word-wrap: break-word !important;
+          word-break: break-word !important;
         }
 
-        .ws-sidebar-footer{
-          position: sticky;
-          bottom: 0;
-          padding-top: 0px;
-          padding-bottom: 0px;
-          margin-top: 0px;
-          background: linear-gradient(180deg, rgba(255,232,244,0.0), rgba(255,232,244,0.92));
-          backdrop-filter: blur(10px);
-          border-top: 1px solid rgba(232, 74, 159, 0.18);
-          z-index: 5;
+        /* FIXED: Allow text to wrap properly inside sidebar buttons */
+        [data-testid="stSidebar"] div[data-testid="column"] .stButton > button div[data-testid="stMarkdownContainer"] p {
+          white-space: normal !important; /* Allow text wrapping */
+          overflow-wrap: break-word !important; /* Break long words */
+          word-wrap: break-word !important; /* Break long words */
+          word-break: break-word !important; /* Break long words */
+          hyphens: auto !important; /* Add hyphenation for better breaks */
+          max-width: 100% !important; /* Use full available width */
+          width: 100% !important;
+          display: block !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          color: #000000 !important;
+          text-align: left !important;
+          line-height: 1.3 !important; /* Tighter line spacing */
+          overflow: hidden !important; /* Hide any overflow */
+          text-overflow: clip !important;
+        }
+        
+        /* Force the button content wrapper to respect width */
+        [data-testid="stSidebar"] div[data-testid="column"] .stButton > button > div {
+          max-width: 100% !important;
+          overflow: hidden !important;
+          word-wrap: break-word !important;
+        }
+
+        [data-testid="stSidebar"] div[data-testid="column"] .stButton > button:hover {
+          background-color: #EEEEEE !important;
+          border-color: #D1D5DB !important;
+        }
+        
+        /* Highlight Active Chat */
+        .sidebar-active-chat .stButton > button {
+          background-color: rgba(168, 85, 247, 0.1) !important;
+          border-color: #A855F7 !important;
+          font-weight: 700 !important;
+          color: #4C1D95 !important;
+        }
+
+        /* Popover "⋮" Styling */
+        [data-testid="stSidebar"] [data-testid="stPopover"] > button {
+          background: transparent !important;
+          border: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 20px !important;
+          height: 40px !important;
+          min-width: 20px !important;
+          box-shadow: none !important;
+          color: #666666 !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stPopover"] > button:hover {
+          background: #ECECEC !important;
+          color: #000000 !important;
+          border-radius: 4px !important;
+        }
+        /* HIDE the downward arrow in popover */
+        [data-testid="stSidebar"] [data-testid="stPopover"] > button div[data-testid="stMarkdownContainer"] + svg {
+          display: none !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stPopover"] svg {
+          display: none !important;
+        }
+
+        /* Primary Sidebar Buttons (New Chat, Logout) - Vibrant Purple Gradient */
+        /* Using extremely high specificity to override Streamlit defaults */
+        [data-testid="stSidebar"] div.sidebar-primary-btn .stButton > button {
+          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+          color: #FFFFFF !important;
+          border: none !important;
+          border-radius: 30px !important; /* Pill shape */
+          font-weight: 700 !important;
+          text-align: center !important;
+          justify-content: center !important;
+          padding: 12px 20px !important;
+          margin: 10px 0 !important;
+          box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2) !important;
+          display: flex !important;
+          width: 100% !important;
+        }
+        [data-testid="stSidebar"] div.sidebar-primary-btn .stButton > button:hover {
+          filter: brightness(1.1);
+          box-shadow: 0 6px 16px rgba(168, 85, 247, 0.3) !important;
+          transform: translateY(-1px);
+        }
+        [data-testid="stSidebar"] div.sidebar-primary-btn .stButton > button * {
+          color: #FFFFFF !important;
         }
 
         .ws-sidebar-footer .stButton > button{
-          text-align: center !important;
-          justify-content: center !important;
-          font-weight: 700 !important;
-          border: none !important;
-          background: linear-gradient(90deg, var(--peach), var(--lav)) !important;
-          color: var(--ws-text) !important;
-          border-radius: 30px !important;
-          height: 50px !important;
-          font-size: 17px !important;
-          box-shadow: none !important;
+          background: #000000 !important;
+          color: #FFFFFF !important;
+          border-radius: 30px !important; /* Pill shape */
+          height: 44px !important;
+          font-size: 15px !important;
+          font-weight: 600 !important;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+        }
+        .ws-sidebar-footer .stButton > button * {
+            color: #FFFFFF !important;
         }
 
-        /* Main page buttons */
+        /* Main page buttons (Emergency, etc.) */
         .stButton > button{
-          background: linear-gradient(90deg, var(--pastel-pink), var(--pastel-blue)) !important;
-          color: var(--ws-text) !important;
-          border-radius: 30px !important;
-          height: 50px !important;
-          font-size: 17px !important;
-          font-weight: 700 !important;
+          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+          color: #FFFFFF !important;
+          border-radius: 12px !important;
+          height: 48px !important;
+          font-size: 16px !important;
+          font-weight: 600 !important;
           border: none !important;
-          box-shadow: 0 8px 24px rgba(75, 63, 114, 0.08);
-          transition: 0.3s ease;
-          padding: 25px !important;
+          box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2);
+          transition: 0.2s ease;
+          padding: 0 25px !important;
         }
+        /* CRITICAL: Force elements to be white on purple gradient */
+        .stButton > button *, 
+        .sidebar-primary-btn button * {
+            color: #FFFFFF !important;
+        }
+        
         .stButton > button:hover {
-          background: linear-gradient(90deg, var(--pastel-blue), var(--pastel-pink));
-          box-shadow: 0 8px 32px rgba(75, 63, 114, 0.18);
-          transform: scale(1.04);
-          color: var(--ws-text) !important;
+          filter: brightness(1.1);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px rgba(168, 85, 247, 0.3);
+        }
+        /* ===== Compact Popover Menu (Final Adjustment) ===== */
+
+        /* Popover box — Extremely narrow and centered */
+        [data-testid="stSidebar"] [data-testid="stPopoverBody"] {
+          background-color: #F1F3F4 !important; /* Matches sidebar bg for seamless look */
+          border-radius: 12px !important;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+          border: 1px solid rgba(0,0,0,0.05) !important;
+          padding: 2px 0 !important;
+          width: 50px !important;
+          min-width: 50px !important;
+          max-width: 50px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+        }
+
+        /* Popover buttons — Black Pills, Centered, Narrow */
+        [data-testid="stSidebar"] [data-testid="stPopoverBody"] .stButton {
+          width: 100% !important;
+          display: flex !important;
+          justify-content: center !important;
+          margin: 4px 0 !important;
+        }
+
+        /* Popover buttons — Vibrant Purple Gradient Pills, Centered, Narrow */
+        [data-testid="stSidebar"] [data-testid="stPopoverBody"] .stButton > button {
+          width: 50px !important;   /* Narrower buttons as set by user */
+          height: 36px !important;
+          padding: 0 !important;
+          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+          color: #FFFFFF !important;
+          border-radius: 20px !important; /* Pill shape */
+          border: none !important;
+          box-shadow: 0 2px 8px rgba(147, 51, 234, 0.2) !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          text-align: center !important;
+          transition: all 0.2s ease !important;
+        }
+
+        [data-testid="stSidebar"] [data-testid="stPopoverBody"] .stButton > button:hover {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
+        }
+
+        /* Ensure text inside buttons is centered and white */
+        [data-testid="stSidebar"] [data-testid="stPopoverBody"] .stButton > button div[data-testid="stMarkdownContainer"] p {
+            justify-content: center !important;
+            color: #FFFFFF !important;
+            margin: 0 !important;
+        }
+
+        /* Override any inherited coloring */
+        [data-testid="stPopoverBody"] .stButton > button * {
+          color: #FFFFFF !important;
+        }
+        
+        /* Highlight for Selected Chat in Sidebar */
+        /* Active Chat Pill Highlight */
+        .sidebar-active-chat .stButton > button {
+          background: #F0F0F0 !important;
+          font-weight: 600 !important;
+          border-radius: 8px !important;
+        }
+        [data-testid="stSidebar"] div[data-testid="column"] .stButton > button:hover {
+          background: #F8F8F8 !important;
+        }
+
+        /* Ensure sidebar chat buttons wrap long titles */
+        [data-testid="stSidebar"] .stButton > button {
+          white-space: normal !important;
+          word-break: break-word !important;
+          text-align: left !important;
+          height: auto !important;
+          min-height: 38px !important;
         }
 
         /* Chat bubbles */
@@ -408,15 +592,18 @@ def _apply_main_styles():
         [data-testid="stChatMessage"] > div{
           border-radius: 18px !important;
           padding: 16px 18px !important;
-          max-width: 92% !important;
+          max-width: 85% !important;
           box-shadow: var(--shadow) !important;
           border: 1px solid var(--border-soft) !important;
           backdrop-filter: blur(10px);
+          overflow-wrap: break-word !important;
+          word-break: break-word !important;
+          hyphens: auto !important;
         }
 /* Ensure Save/Cancel remain roomy and don't wrap their text */
         [data-testid="stChatMessage"] .stButton > button[aria-label="Save"],
         [data-testid="stChatMessage"] .stButton > button[aria-label="Cancel"] {
-          padding: 10px 28px !important;
+          padding: 5px 12px !important;
           font-size: 16px !important;
           white-space: nowrap !important;
           min-height: 44px !important;
@@ -451,82 +638,130 @@ def _apply_main_styles():
           margin: 0 !important;
           box-sizing: border-box !important;
         }
+        /* Chat bubbles - Further Refined Professional Look */
+        [data-testid="stChatMessage"]{ background: transparent !important; padding: 12px 0 !important; }
+        [data-testid="stChatMessage"] > div{
+          border-radius: 12px !important;
+          padding: 14px 18px !important;
+          max-width: 85% !important;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
+          border: 1px solid #F3F4F6 !important;
+        }
         [data-testid="stChatMessage"][data-st-chat-message="user"] > div{
-          background: rgba(255, 255, 255, 0.95) !important;
+          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+          color: #FFFFFF !important;
           margin-left: auto !important;
-          border: 1px solid var(--lav) !important;
+          border: none !important;
+          box-shadow: 0 4px 15px rgba(147, 51, 234, 0.1) !important;
+        }
+        [data-testid="stChatMessage"][data-st-chat-message="user"] * {
+          color: #FFFFFF !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="assistant"] > div{
-          background: rgba(246, 242, 255, 0.65) !important;
+          background: #FFFFFF !important;
+          color: #111827 !important;
           margin-right: auto !important;
-          border: 1px solid var(--lav) !important;
+          border: 1px solid #F3E8FF !important; /* Extremely subtle purple border */
+          box-shadow: 0 2px 12px rgba(147, 51, 234, 0.03) !important;
+        }
+        [data-testid="stChatMessage"][data-st-chat-message="assistant"] * {
+          color: #111827 !important;
         }
 
         /* =========================================================
-           REMOVE BLACK STRIP BEHIND CHAT INPUT
-           (Make the chat input full width across the page)
+           CHAT INPUT - FIXED VISIBILITY
            ========================================================= */
-        /* Ensure the bottom block spans full width and uses box-sizing */
+        /* Bottom block container */
         div[data-testid="stBottomBlockContainer"] {
           width: 100% !important;
           padding: 12px 24px !important;
           box-sizing: border-box !important;
-          background: transparent !important;
+          background: #FFFFFF !important;
+          border-top: 1px solid #E5E5E5 !important;
         }
 
-        /* Make the floating input container and bottom block full width and padded */
-        .stChatFloatingInputContainer,
+        /* Floating input container */
+        .stChatFloatingInputContainer {
+          background: #FFFFFF !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 12px 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        /* THE NUCLEAR OPTION - REMOVE ALL BORDERS BY DEFAULT */
+        .stChatInput,
         div[data-testid="stChatInputContainer"],
-        div[data-testid="stBottomBlockContainer"] {
-          /* Use a single solid color behind the chat input across the page */
-          background: var(--chat-input-bg) !important;
+        div[data-testid="stChatInputContainer"] > div,
+        div[data-testid="stChatInputContainer"] > div > div,
+        div[data-testid="stChatInputContainer"] > div > div > div {
+          background-color: #FFFFFF !important;
+          border: 1px solid transparent !important; /* NO BORDER */
+          border-radius: 12px !important;
+          box-shadow: none !important;
+          outline: none !important;
+          transition: all 0.2s ease !important;
+        }
+
+        /* Show border ONLY on hover */
+        div[data-testid="stChatInputContainer"]:hover,
+        div[data-testid="stChatInputContainer"]:hover > div,
+        div[data-testid="stChatInputContainer"]:hover > div > div {
+          border-color: #9333EA !important;
+        }
+
+        /* Focus state - Show purple border when active */
+        .stChatInput:focus-within,
+        div[data-testid="stChatInputContainer"]:focus-within,
+        div[data-testid="stChatInputContainer"]:focus-within > div,
+        div[data-testid="stChatInputContainer"]:focus-within > div > div {
+          border-color: #9333EA !important;
+          box-shadow: 0 0 0 1px #9333EA !important;
+          outline: none !important;
+        }
+
+        /* Kill all default Streamlit focus rings */
+        [data-testid="stChatInputContainer"] textarea:focus,
+        [data-testid="stChatInputContainer"] textarea:active {
           border: none !important;
           box-shadow: none !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          padding: 12px 24px !important;
-          box-sizing: border-box !important;
-          border-radius: 0 !important; /* match full-width strip look */
+          outline: none !important;
         }
 
-        /* Apply minimal wrapper to the input so the strip behind remains a single color */
-        div[data-testid="stChatInputContainer"] {
-          border: none !important; /* keep wrapper clean */
-          border-radius: 0 !important; /* no rounded box so it blends */
-          background: transparent !important; /* transparent so the strip shows */
-          box-shadow: none !important;
-          padding: 0 24px !important; /* align with strip padding */
-          color: var(--ws-text) !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          margin: 0 auto !important;
-          box-sizing: border-box !important;
-        }
-
-        /* Make the text input blend with the strip and occupy full width */
+        /* The actual input field */
         div[data-testid="stChatInputContainer"] input,
         div[data-testid="stChatInputContainer"] textarea {
-          color: var(--ws-text) !important;
-          background: transparent !important; /* show the strip color behind */
-          caret-color: var(--ws-text) !important;
+          color: #000000 !important;
+          background: transparent !important;
+          caret-color: #000000 !important;
           width: 100% !important;
-          padding: 18px 12px !important; /* comfortable vertical padding */
-          border-radius: 0 !important; /* flat edges to match strip */
+          padding: 12px 8px !important;
           border: none !important;
+          outline: none !important;
           box-shadow: none !important;
           font-size: 16px !important;
         }
 
-        /* Style the submit/send button so it's visible on the strip */
-        div[data-testid="stChatInputContainer"] button {
-          background: transparent !important;
-          border: none !important;
-          color: var(--ws-text) !important;
-          font-weight: 700 !important;
+        div[data-testid="stChatInputContainer"] input::placeholder,
+        div[data-testid="stChatInputContainer"] textarea::placeholder {
+          color: #9CA3AF !important;
         }
 
-        /* Also ensure the bottom floating wrapper keeps full width */
-        .stChatFloatingInputContainer { width: 100% !important; padding: 8px 24px !important; box-sizing: border-box !important; }
+        /* Submit button */
+        div[data-testid="stChatInputContainer"] button {
+          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+          border: none !important;
+          color: #FFFFFF !important;
+          font-weight: 700 !important;
+          padding: 8px 16px !important;
+          border-radius: 8px !important;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 2px 5px rgba(147, 51, 234, 0.2) !important;
+        }
+
+        div[data-testid="stChatInputContainer"] button:hover {
+          filter: brightness(1.1);
+        }
 
 /* No hover / focus box */
 [data-testid="stChatMessage"] .stButton > button[aria-label="✎"]:hover,
@@ -558,31 +793,38 @@ def _apply_main_styles():
 
 /* Target Save & Cancel buttons INSIDE chat */
 [data-testid="stChatMessage"] .stButton > button {
-  background: linear-gradient(
-    135deg,
-    var(--pastel-pink),
-    var(--pastel-lav),
-    var(--pastel-blue)
-  ) !important;
-
-  color: var(--ws-text) !important;
-  font-weight: 700 !important;
-  padding: 10px 28px !important;
-  border-radius: 22px !important;
+  background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  border-radius: 8px !important;
   border: none !important;
-  box-shadow: 0 6px 16px rgba(75, 63, 114, 0.18) !important;
+  box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2) !important;
   cursor: pointer !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  transition: all 0.2s ease !important;
   white-space: nowrap !important;
 }
 
 /* Hover effect */
 [data-testid="stChatMessage"] .stButton > button:hover {
-  transform: scale(1.06);
-  box-shadow: 0 10px 26px rgba(75, 63, 114, 0.28) !important;
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 [data-testid="stChatMessage"] > div {
   position: relative !important;
+}
+
+/* Popover buttons styling */
+[data-testid="stPopover"] button {
+  font-size: 16px !important;
+  padding: 8px !important;
+  min-width: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
         </style>

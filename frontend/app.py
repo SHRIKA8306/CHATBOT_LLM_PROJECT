@@ -1,7 +1,5 @@
 import streamlit as st
 import requests
-import base64
-from right_side import show_right_sidebar
 from Styles import apply_styles
 import pyperclip
 
@@ -31,7 +29,6 @@ st.session_state.setdefault("chat_id", None)
 st.session_state.setdefault("renaming_chat", None)
 st.session_state.setdefault("rename_text", "")
 
-apply_styles()
 
 # ---------------- GOOGLE LOGIN CHECK ----------------
 def _format_display_name(raw: str) -> str:
@@ -87,6 +84,9 @@ if _qp_first("history"):
     st.session_state.selected_history = _qp_first("history")
 
 st.session_state.setdefault("sources", {})
+
+# Apply styles AFTER login state is determined
+apply_styles()
 
 # ---------------- HELPERS ----------------
 def render_chat_from_history():
@@ -309,7 +309,7 @@ else:
 
     with st.sidebar:
         display = st.session_state.display_name or _format_display_name(st.session_state.username)
-        st.markdown(f"<h2 style='font-weight:500; font-size:20px'>Hi {display}</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='font-weight:500; font-size:20px';>Hi {display}</h2>", unsafe_allow_html=True)
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
@@ -317,7 +317,7 @@ else:
             st.query_params.pop("history", None)
             st.rerun()
         
-        st.markdown("### Chat History")
+        st.markdown("<h3 style='font-weight:400; font-size:14px; color:#666; margin-bottom:10px'>Your chats </h3>", unsafe_allow_html=True)
 
         try:
             response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
@@ -333,9 +333,13 @@ else:
                         chat_id = thread["id"]
                         title = thread.get("title", "Untitled Chat")
 
-                        row = st.columns([8, 1])
+                        row = st.columns([9, 1])
 
                         with row[0]:
+                            is_active = (chat_id == st.session_state.selected_history)
+                            if is_active:
+                                st.markdown('<div class="sidebar-active-chat">', unsafe_allow_html=True)
+                            
                             if st.button(title, key=f"chat_{chat_id}", use_container_width=True):
                                 st.session_state.selected_history = chat_id
                                 st.session_state.chat_id = chat_id
@@ -345,19 +349,24 @@ else:
                                 ]
                                 _set_qp(history=str(chat_id))
                                 st.rerun()
+                            
+                            if is_active:
+                                st.markdown('</div>', unsafe_allow_html=True)
 
                         with row[1]:
                             with st.popover("⋮"):
-                                if st.button("🔗 Share", key=f"share_{chat_id}", use_container_width=True):
+                                # Top Section
+                                if st.button("Share", key=f"share_{chat_id}", use_container_width=True):
                                     share_link = f"http://localhost:8501/?history={chat_id}"
                                     st.info(f"Share link:\n{share_link}")
-
-                                if st.button("✏️ Rename", key=f"rename_btn_{chat_id}", use_container_width=True):
+                                
+                                if st.button("Rename", key=f"rename_btn_{chat_id}", use_container_width=True):
                                     st.session_state.renaming_chat = chat_id
                                     st.session_state.rename_text = title
                                     st.rerun()
-
-                                if st.button("🗑️ Delete", key=f"delete_{chat_id}", use_container_width=True):
+                                
+                                # Bottom Section
+                                if st.button(" Delete", key=f"delete_{chat_id}", use_container_width=True):
                                     requests.delete(f"{API_BASE_URL}/delete_chat/{chat_id}")
                                     st.rerun()
 
@@ -391,39 +400,46 @@ else:
             _clear_qp()
             st.rerun()
 
-    top_l, top_r = st.columns([4, 2], vertical_alignment="center")
-    with top_l:
-        st.markdown("## Women's Safety AI Assistant")
-        st.caption("Ask about laws, safety tips, emergencies, and immediate help.")
+    # Header Area - Compact
+    h_col1, h_col2 = st.columns([4, 1])
+    with h_col1:
+        st.markdown("<h1 style='margin-bottom:0'>Women's Safety AI Assistant</h1>", unsafe_allow_html=True)
+    with h_col2:
+        if st.button("Emergency", use_container_width=True, key="header_emergency"):
+            st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})
+            reply, sources = api_chat("Give me all women's safety helpline numbers in India")
+            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.sources[len(st.session_state.messages)-1] = sources
+            st.rerun()
 
-    with top_r:
-        c1, c2 = st.columns(2)
-        with c2:
-            if st.button("Emergency", use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})
-                reply, sources = api_chat("Give me all women's safety helpline numbers in India")
-                st.session_state.messages.append({"role": "assistant", "content": reply})
-                st.session_state.sources[len(st.session_state.messages)-1] = sources
-                st.rerun()
+    st.write("") # Spacer
 
     body_l, body_r = st.columns([3, 1], gap="large")
     with body_l:
-        render_chat_from_history()
-    with body_r:
-        show_right_sidebar()
+        if not st.session_state.messages:
+            # Centered Welcome Screen for Empty Chat
+            st.markdown(
+                """
+                    <h2 style='text-align:center'>How can I help you today?</h2>
+                    <p style='text-align:center'>Ask about laws, safety tips, or find immediate help.</p>
+                """, unsafe_allow_html=True
+            )
+        else:
+            render_chat_from_history()
 
     # Disable chat input while editing
     chat_disabled = st.session_state.get("editing") is not None
     
-    user_input = st.chat_input(
-        "Ask about laws, safety, or emergencies...",
-        disabled=chat_disabled
-    )
+    if not chat_disabled:
+        user_input = st.chat_input(
+            "Ask about laws, safety, or emergencies...",
+            disabled=False
+        )
 
-    if user_input and not chat_disabled:
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        with st.spinner("🛡️ Generating response..."):
-            reply, sources = api_chat(user_input)
-        st.session_state.messages.append({"role": "assistant", "content": reply})
-        st.session_state.sources[len(st.session_state.messages)-1] = sources
-        st.rerun()
+        if user_input:
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            with st.spinner("🛡️ Generating response..."):
+                reply, sources = api_chat(user_input)
+            st.session_state.messages.append({"role": "assistant", "content": reply})
+            st.session_state.sources[len(st.session_state.messages)-1] = sources
+            st.rerun()
