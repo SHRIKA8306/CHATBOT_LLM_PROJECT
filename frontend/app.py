@@ -201,7 +201,7 @@ if not st.session_state.logged_in:
         st.markdown(
             """
             <div style="text-align: center; margin-bottom: 0.5rem;">
-                <div style="font-size: 30px; font-weight: 800; color: black; line-height: 1.1; margin-bottom: 4px;">Women Safety Assistant</div>
+                <div class="login-header">Women Safety Assistant</div>
                 <div style="font-size: 15px; color: #666; line-height: 1.2;">Your trusted legal & safety companion</div>
             </div>
             """, unsafe_allow_html=True
@@ -310,12 +310,14 @@ else:
     with st.sidebar:
         display = st.session_state.display_name or _format_display_name(st.session_state.username)
         st.markdown(f"<h2 style='font-weight:500; font-size:20px';>Hi {display}</h2>", unsafe_allow_html=True)
+        st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
         if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
             st.session_state.chat_id = None
             st.query_params.pop("history", None)
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
         
         st.markdown("<h3 style='font-weight:400; font-size:14px; color:#666; margin-bottom:10px'>Your chats </h3>", unsafe_allow_html=True)
 
@@ -395,22 +397,26 @@ else:
         except Exception as e:
             st.error(f"History load failed: {e}")
 
+        st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Header Area - Compact
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
         st.markdown("<h1 style='margin-bottom:0'>Women's Safety AI Assistant</h1>", unsafe_allow_html=True)
     with h_col2:
+        st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
         if st.button("Emergency", use_container_width=True, key="header_emergency"):
             st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})
             reply, sources = api_chat("Give me all women's safety helpline numbers in India")
             st.session_state.messages.append({"role": "assistant", "content": reply})
             st.session_state.sources[len(st.session_state.messages)-1] = sources
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     st.write("") # Spacer
 

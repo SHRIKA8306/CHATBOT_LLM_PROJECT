@@ -116,8 +116,8 @@ def _apply_login_styles():
         /* Focus State - Target the wrapper div, not the input itself */
         .stTextInput > div:first-child > div:first-child:focus-within {
             background-color: #FFFFFF !important;
-            border: 1px solid #A855F7 !important;
-            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2) !important;
+            border: 1px solid #7c3aed !important;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
             outline: none !important;
         }
         .stTextInput label {
@@ -129,7 +129,7 @@ def _apply_login_styles():
 
         /* BUTTONS - Pill Shaped & Vibrant Purple Gradient - REDUCED HEIGHT */
         .stButton > button {
-            background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+            background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%) !important;
             color: #FFFFFF !important;
             border: none !important;
             border-radius: 12px !important; /* Slightly more rounded */
@@ -137,7 +137,7 @@ def _apply_login_styles():
             font-size: 14px !important;
             height: 48px !important; /* Increased height to match image */
             width: 100% !important;
-            box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2) !important;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2) !important;
             transition: all 0.2s ease;
             margin-top: 0.1rem !important;
             margin-bottom: 0.1rem !important;
@@ -145,14 +145,14 @@ def _apply_login_styles():
         .stButton > button:hover {
             transform: scale(1.02);
             filter: brightness(1.1);
-            box-shadow: 0 6px 15px rgba(147, 51, 234, 0.3) !important;
+            box-shadow: 0 6px 15px rgba(124, 58, 237, 0.3) !important;
         }
         
         /* Secondary / Google Button - Now using theme color to match user request */
         .google-btn-container button {
-             background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+             background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%) !important;
              color: #FFFFFF !important;
-             box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2) !important;
+             box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2) !important;
         }
         .google-btn-container button:hover {
              filter: brightness(1.1);
@@ -165,10 +165,13 @@ def _apply_login_styles():
 
         /* Simple Text Styling */
         .login-header {
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 30px;
+            font-weight: 800;
             margin-bottom: 5px;
             text-align: center;
+            background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .login-sub {
             font-size: 13px;
@@ -275,6 +278,15 @@ def _apply_main_styles():
           background-clip: initial !important;
           margin-top: 0.5rem !important;
           margin-bottom: 0.5rem !important;
+        }
+
+        .main-header {
+          font-size: 40px;
+          font-weight: 800;
+          background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          margin-bottom: 0 !important;
         }
         
         [data-testid="stCaptionContainer"], .stCaptionContainer, small {
@@ -413,10 +425,10 @@ def _apply_main_styles():
         
         /* Highlight Active Chat */
         .sidebar-active-chat .stButton > button {
-          background-color: rgba(168, 85, 247, 0.1) !important;
-          border-color: #A855F7 !important;
+          background-color: #F3F4F6 !important;
+          border-color: #9CA3AF !important;
           font-weight: 700 !important;
-          color: #4C1D95 !important;
+          color: #000000 !important;
         }
 
         /* Popover "⋮" Styling */
@@ -447,8 +459,8 @@ def _apply_main_styles():
         /* Primary Sidebar Buttons (New Chat, Logout) - Vibrant Purple Gradient */
         /* Using extremely high specificity to override Streamlit defaults */
         [data-testid="stSidebar"] div.sidebar-primary-btn .stButton > button {
-          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
-          color: #FFFFFF !important;
+          background: #F3F4F6 !important;
+          color: #000000 !important;
           border: none !important;
           border-radius: 30px !important; /* Pill shape */
           font-weight: 700 !important;
@@ -456,16 +468,48 @@ def _apply_main_styles():
           justify-content: center !important;
           padding: 12px 20px !important;
           margin: 10px 0 !important;
-          box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2) !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
           display: flex !important;
           width: 100% !important;
         }
         [data-testid="stSidebar"] div.sidebar-primary-btn .stButton > button:hover {
           filter: brightness(1.1);
-          box-shadow: 0 6px 16px rgba(168, 85, 247, 0.3) !important;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1) !important;
           transform: translateY(-1px);
         }
         [data-testid="stSidebar"] div.sidebar-primary-btn .stButton > button * {
+          color: #000000 !important;
+        }
+
+        /* SPECIFIC TARGET: Only change color for New Chat, Logout, and Emergency buttons
+           Target buttons inside gradient-button-wrapper to avoid affecting chat history buttons */
+        /* Higher specificity to override sidebar-primary-btn and other button styles */
+        [data-testid="stSidebar"] .gradient-button-wrapper .stButton > button,
+        .gradient-button-wrapper .stButton > button,
+        div.gradient-button-wrapper .stButton > button {
+          background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%) !important;
+          color: #FFFFFF !important;
+          border: none !important;
+          border-radius: 30px !important;
+          font-weight: 700 !important;
+          padding: 10px 18px !important;
+          box-shadow: 0 6px 16px rgba(124, 58, 237, 0.18) !important;
+          text-align: center !important;
+          justify-content: center !important;
+        }
+
+        [data-testid="stSidebar"] .gradient-button-wrapper .stButton > button:hover,
+        .gradient-button-wrapper .stButton > button:hover,
+        div.gradient-button-wrapper .stButton > button:hover {
+          background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%) !important;
+          filter: brightness(1.08) !important;
+          transform: translateY(-1px) !important;
+        }
+
+        /* Ensure internal text/icons inside these buttons stay white */
+        [data-testid="stSidebar"] .gradient-button-wrapper .stButton > button *,
+        .gradient-button-wrapper .stButton > button *,
+        div.gradient-button-wrapper .stButton > button * {
           color: #FFFFFF !important;
         }
 
@@ -484,27 +528,27 @@ def _apply_main_styles():
 
         /* Main page buttons (Emergency, etc.) */
         .stButton > button{
-          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
-          color: #FFFFFF !important;
+          background: #F3F4F6 !important;
+          color: #000000 !important;
           border-radius: 12px !important;
           height: 48px !important;
           font-size: 16px !important;
           font-weight: 600 !important;
           border: none !important;
-          box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
           transition: 0.2s ease;
           padding: 0 25px !important;
         }
         /* CRITICAL: Force elements to be white on purple gradient */
         .stButton > button *, 
         .sidebar-primary-btn button * {
-            color: #FFFFFF !important;
+            color: #000000 !important;
         }
         
         .stButton > button:hover {
           filter: brightness(1.1);
           transform: translateY(-2px);
-          box-shadow: 0 6px 15px rgba(168, 85, 247, 0.3);
+          box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
         /* ===== Compact Popover Menu (Final Adjustment) ===== */
 
@@ -536,11 +580,11 @@ def _apply_main_styles():
           width: 50px !important;   /* Narrower buttons as set by user */
           height: 36px !important;
           padding: 0 !important;
-          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
-          color: #FFFFFF !important;
+          background: #F3F4F6 !important;
+          color: #000000 !important;
           border-radius: 20px !important; /* Pill shape */
           border: none !important;
-          box-shadow: 0 2px 8px rgba(147, 51, 234, 0.2) !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
           font-size: 13px !important;
           font-weight: 500 !important;
           display: flex !important;
@@ -558,13 +602,13 @@ def _apply_main_styles():
         /* Ensure text inside buttons is centered and white */
         [data-testid="stSidebar"] [data-testid="stPopoverBody"] .stButton > button div[data-testid="stMarkdownContainer"] p {
             justify-content: center !important;
-            color: #FFFFFF !important;
+            color: #000000 !important;
             margin: 0 !important;
         }
 
         /* Override any inherited coloring */
         [data-testid="stPopoverBody"] .stButton > button * {
-          color: #FFFFFF !important;
+          color: #000000 !important;
         }
         
         /* Highlight for Selected Chat in Sidebar */
@@ -648,21 +692,21 @@ def _apply_main_styles():
           border: 1px solid #F3F4F6 !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="user"] > div{
-          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
-          color: #FFFFFF !important;
+          background: #F3F4F6 !important;
+          color: #000000 !important;
           margin-left: auto !important;
           border: none !important;
-          box-shadow: 0 4px 15px rgba(147, 51, 234, 0.1) !important;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="user"] * {
-          color: #FFFFFF !important;
+          color: #000000 !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="assistant"] > div{
           background: #FFFFFF !important;
           color: #111827 !important;
           margin-right: auto !important;
-          border: 1px solid #F3E8FF !important; /* Extremely subtle purple border */
-          box-shadow: 0 2px 12px rgba(147, 51, 234, 0.03) !important;
+          border: 1px solid #F3F4F6 !important; /* Extremely subtle border */
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;
         }
         [data-testid="stChatMessage"][data-st-chat-message="assistant"] * {
           color: #111827 !important;
@@ -707,7 +751,7 @@ def _apply_main_styles():
         div[data-testid="stChatInputContainer"]:hover,
         div[data-testid="stChatInputContainer"]:hover > div,
         div[data-testid="stChatInputContainer"]:hover > div > div {
-          border-color: #9333EA !important;
+          border-color: #9CA3AF !important;
         }
 
         /* Focus state - Show purple border when active */
@@ -715,9 +759,20 @@ def _apply_main_styles():
         div[data-testid="stChatInputContainer"]:focus-within,
         div[data-testid="stChatInputContainer"]:focus-within > div,
         div[data-testid="stChatInputContainer"]:focus-within > div > div {
-          border-color: #9333EA !important;
-          box-shadow: 0 0 0 1px #9333EA !important;
+          border-color: #000000 !important;
+          box-shadow: 0 0 0 1px #000000 !important;
           outline: none !important;
+        }
+
+        /* RED BORDER REMOVAL - Explicitly kill red on textarea and invalid states */
+        div[data-testid="stChatInputContainer"] textarea,
+        div[data-testid="stChatInputContainer"] textarea:focus,
+        div[data-testid="stChatInputContainer"] textarea:invalid,
+        div[data-testid="stChatInputContainer"] textarea:required {
+          border: none !important;
+          box-shadow: none !important;
+          outline: none !important;
+          border-color: transparent !important;
         }
 
         /* Kill all default Streamlit focus rings */
@@ -749,14 +804,14 @@ def _apply_main_styles():
 
         /* Submit button */
         div[data-testid="stChatInputContainer"] button {
-          background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
+          background: #F3F4F6 !important;
           border: none !important;
-          color: #FFFFFF !important;
+          color: #000000 !important;
           font-weight: 700 !important;
           padding: 8px 16px !important;
           border-radius: 8px !important;
           transition: all 0.2s ease !important;
-          box-shadow: 0 2px 5px rgba(147, 51, 234, 0.2) !important;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
         }
 
         div[data-testid="stChatInputContainer"] button:hover {
@@ -793,13 +848,13 @@ def _apply_main_styles():
 
 /* Target Save & Cancel buttons INSIDE chat */
 [data-testid="stChatMessage"] .stButton > button {
-  background: linear-gradient(135deg, #9333EA 0%, #7C3AED 100%) !important;
-  color: #FFFFFF !important;
+  background: #F3F4F6 !important;
+  color: #000000 !important;
   font-weight: 600 !important;
   padding: 8px 18px !important;
   border-radius: 8px !important;
   border: none !important;
-  box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   white-space: nowrap !important;
