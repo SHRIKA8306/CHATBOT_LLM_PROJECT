@@ -316,7 +316,6 @@ else:
             st.session_state.chat_id = None
             st.query_params.pop("history", None)
             st.rerun()
-        
         st.markdown("<h3 style='font-weight:400; font-size:16px; color:#666;'>Your chats </h3>", unsafe_allow_html=True)
 
         try:
