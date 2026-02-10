@@ -396,18 +396,7 @@ else:
             st.rerun()
 
     # Header Area - Compact
-    h_col1, h_col2 = st.columns([4, 1])
-    with h_col1:
-        st.markdown("<h1 style= 'color:#4c1d95'>Women's Safety AI Assistant</h1>", unsafe_allow_html=True)
-    with h_col2:
-        st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
-        if st.button("Emergency", use_container_width=True, key="header_emergency"):
-            st.session_state.messages.append({"role": "user", "content": "Emergency & helpline numbers"})
-            reply, sources = api_chat("Give me all women's safety helpline numbers in India")
-            st.session_state.messages.append({"role": "assistant", "content": reply})
-            st.session_state.sources[len(st.session_state.messages)-1] = sources
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<h1 style='margin-bottom:0'>Women's Safety AI Assistant</h1>", unsafe_allow_html=True)
 
     st.write("") # Spacer
 
