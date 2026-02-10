@@ -309,15 +309,17 @@ else:
 
     with st.sidebar:
         display = st.session_state.display_name or _format_display_name(st.session_state.username)
-        st.markdown(f"<h1 style='font-weight:700; font-size:30px';margin-top:0;>Hi {display}</h1>", unsafe_allow_html=True)
-        if st.button(" New Chat", use_container_width=True, key="new_chat_btn"):
+        st.markdown('<h1 style="font-weight:700; font-size:30px; margin-top:0; margin-bottom:1rem;">Hi {}</h1>'.format(display), unsafe_allow_html=True)
+        
+        if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn", help="Start a new conversation"):
             st.session_state.messages = []
             st.session_state.selected_history = None
             st.session_state.chat_id = None
             st.query_params.pop("history", None)
             st.rerun()
         
-        st.markdown("<h3 style='font-weight:400; font-size:16px; color:#666;'>Your chats </h3>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1px; background: linear-gradient(90deg, transparent, #E5E7EB, transparent); margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-weight:500; font-size:13px; color:#6B7280; text-transform:uppercase; letter-spacing:0.5px; margin: 0.75rem 0.5rem;'>Your Chats</h3>", unsafe_allow_html=True)
 
         try:
             response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
@@ -328,70 +330,88 @@ else:
                 if hist:
                     load_history_chat(str(hist), history)
 
-                with st.container(height=405):
-                    for thread in history:
-                        chat_id = thread["id"]
-                        title = thread.get("title", "Untitled Chat")
+                for thread in history:
+                    chat_id = thread["id"]
+                    title = thread.get("title", "Untitled Chat")
 
-                        row = st.columns([9, 1])
+                    row = st.columns([9, 1])
 
-                        with row[0]:
-                            is_active = (chat_id == st.session_state.selected_history)
-                            if is_active:
-                                st.markdown('<div class="sidebar-active-chat">', unsafe_allow_html=True)
+                    with row[0]:
+                        is_active = (chat_id == st.session_state.selected_history)
+                        if is_active:
+                            st.markdown('<div class="sidebar-active-chat">', unsafe_allow_html=True)
+                        
+                        if st.button(title, key=f"chat_{chat_id}", use_container_width=True):
+                            st.session_state.selected_history = chat_id
+                            st.session_state.chat_id = chat_id
+                            st.session_state.messages = [
+                                {"role": msg["role"], "content": msg["content"]}
+                                for msg in thread.get("messages", [])
+                            ]
+                            _set_qp(history=str(chat_id))
+                            st.rerun()
+
+                    with row[1]:
+                        with st.popover("⋮", help="Chat options"):
+                            st.markdown('<div style="padding: 0.25rem 0;">', unsafe_allow_html=True)
                             
-                            if st.button(title, key=f"chat_{chat_id}", use_container_width=True):
-                                st.session_state.selected_history = chat_id
-                                st.session_state.chat_id = chat_id
-                                st.session_state.messages = [
-                                    {"role": msg["role"], "content": msg["content"]}
-                                    for msg in thread.get("messages", [])
-                                ]
-                                _set_qp(history=str(chat_id))
+                            # Share option
+                            if st.button("📤 Share", key=f"share_{chat_id}", use_container_width=True):
+                                share_link = f"http://localhost:8501/?history={chat_id}"
+                                st.info(f"**Share this chat:**\n```\n{share_link}\n```")
+                            
+                            # Rename option
+                            if st.button("✏️ Rename", key=f"rename_btn_{chat_id}", use_container_width=True):
+                                st.session_state.renaming_chat = chat_id
+                                st.session_state.rename_text = title
                                 st.rerun()
+                            
+                            st.divider()
+                            
+                            # Delete option (styled in red)
+                            if st.button("🗑️ Delete", key=f"delete_{chat_id}", use_container_width=True):
+                                requests.delete(f"{API_BASE_URL}/delete_chat/{chat_id}")
+                                st.success("Chat deleted!")
+                                st.rerun()
+                            
+                            st.markdown('</div>', unsafe_allow_html=True)
 
-                        with row[1]:
-                            with st.popover("⋮"):
-                                # Top Section
-                                if st.button("Share", key=f"share_{chat_id}", use_container_width=True):
-                                    share_link = f"http://localhost:8501/?history={chat_id}"
-                                    st.info(f"Share link:\n{share_link}")
-                                
-                                if st.button("Rename", key=f"rename_btn_{chat_id}", use_container_width=True):
-                                    st.session_state.renaming_chat = chat_id
-                                    st.session_state.rename_text = title
-                                    st.rerun()
-                                
-                                # Bottom Section
-                                if st.button(" Delete", key=f"delete_{chat_id}", use_container_width=True):
-                                    requests.delete(f"{API_BASE_URL}/delete_chat/{chat_id}")
-                                    st.rerun()
+                    # Rename input (shown below the chat item)
+                    if st.session_state.renaming_chat == chat_id:
+                        st.markdown('<div style="margin-top: 0.5rem; padding: 0.5rem; background: #F9FAFB; border-radius: 8px;">', unsafe_allow_html=True)
+                        new_title = st.text_input(
+                            "Rename chat",
+                            value=st.session_state.rename_text,
+                            key=f"rename_input_{chat_id}",
+                            placeholder="Enter new chat name..."
+                        )
 
-                        if st.session_state.renaming_chat == chat_id:
-                            new_title = st.text_input(
-                                "Rename chat",
-                                value=st.session_state.rename_text,
-                                key=f"rename_input_{chat_id}"
-                            )
-
-                            c1, c2 = st.columns(2)
-                            with c1:
-                                if st.button("Save", key=f"save_{chat_id}", use_container_width=True):
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            if st.button("✓ Save", key=f"save_rename_{chat_id}", use_container_width=True):
+                                if new_title.strip():
                                     requests.put(
                                         f"{API_BASE_URL}/rename_chat/{chat_id}",
                                         json={"title": new_title}
                                     )
                                     st.session_state.renaming_chat = None
+                                    st.success("Chat renamed!")
                                     st.rerun()
+                                else:
+                                    st.error("Chat name cannot be empty")
 
-                            with c2:
-                                if st.button("Cancel", key=f"cancel_{chat_id}", use_container_width=True):
-                                    st.session_state.renaming_chat = None
-                                    st.rerun()
+                        with c2:
+                            if st.button("✕ Cancel", key=f"cancel_rename_{chat_id}", use_container_width=True):
+                                st.session_state.renaming_chat = None
+                                st.rerun()
+                        st.markdown('</div>', unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"History load failed: {e}")
-        if st.button("Logout", use_container_width=True, key="logout_btn"):
+        
+        st.markdown("<div style='height: 1px; background: linear-gradient(90deg, transparent, #E5E7EB, transparent); margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
+        
+        if st.button("🚪 Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
