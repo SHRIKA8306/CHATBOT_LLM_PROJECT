@@ -149,7 +149,7 @@ def render_chat_from_history():
                     with st.container():
                         spacer, col_copy, col_edit = st.columns([10, 1, 1])
                         with col_copy:
-                            if st.button("⧉", key=f"copy_{i}", help="Copy message"):
+                            if st.button("❐", key=f"copy_{i}", help="Copy message"):
                                 copy_to_clipboard(chat.get("content", ""))
                                 st.toast("Copied to clipboard!")
                         with col_edit:
@@ -161,7 +161,7 @@ def render_chat_from_history():
                     with st.container():
                         spacer, col_copy = st.columns([10, 1])
                         with col_copy:
-                            if st.button("⧉", key=f"copy_{i}", help="Copy message"):
+                            if st.button("❐", key=f"copy_{i}", help="Copy message"):
                                copy_to_clipboard(chat.get("content", ""))
                                st.toast("Copied to clipboard!")
    
@@ -243,7 +243,7 @@ if not st.session_state.logged_in:
                 st.session_state.forgot_mode = True
                 st.rerun()
 
-            st.markdown('<div style="font-size: 18px; font-weight: 500; color: black; text-align:center; margin-top: 0.5rem; margin-bottom: 0.5rem;">Or</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size: 18px; font-weight: 500; color: black; text-align:center; margin-top: 0rem; margin-bottom: 0rem;">Or</div>', unsafe_allow_html=True)
             
             # 6. Google Login (Full Width at bottom)
             st.markdown('<div class="google-btn-container">', unsafe_allow_html=True)
@@ -309,17 +309,15 @@ else:
 
     with st.sidebar:
         display = st.session_state.display_name or _format_display_name(st.session_state.username)
-        st.markdown(f"<h2 style='font-weight:500; font-size:20px';>Hi {display}</h2>", unsafe_allow_html=True)
-        st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
-        if st.button("➕ New Chat", use_container_width=True, key="new_chat_btn"):
+        st.markdown(f"<h1 style='font-weight:700; font-size:30px';margin-top:0;>Hi {display}</h1>", unsafe_allow_html=True)
+        if st.button(" New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
             st.session_state.chat_id = None
             st.query_params.pop("history", None)
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown("<h3 style='font-weight:400; font-size:14px; color:#666; margin-bottom:10px'>Your chats </h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-weight:400; font-size:16px; color:#666;'>Your chats </h3>", unsafe_allow_html=True)
 
         try:
             response = requests.get(f"{API_BASE_URL}/chat_history/{st.session_state.username}")
@@ -330,7 +328,7 @@ else:
                 if hist:
                     load_history_chat(str(hist), history)
 
-                with st.container(height=450):
+                with st.container(height=405):
                     for thread in history:
                         chat_id = thread["id"]
                         title = thread.get("title", "Untitled Chat")
@@ -351,9 +349,6 @@ else:
                                 ]
                                 _set_qp(history=str(chat_id))
                                 st.rerun()
-                            
-                            if is_active:
-                                st.markdown('</div>', unsafe_allow_html=True)
 
                         with row[1]:
                             with st.popover("⋮"):
@@ -396,18 +391,15 @@ else:
 
         except Exception as e:
             st.error(f"History load failed: {e}")
-
-        st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
         if st.button("Logout", use_container_width=True, key="logout_btn"):
             st.session_state.clear()
             _clear_qp()
             st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
     # Header Area - Compact
     h_col1, h_col2 = st.columns([4, 1])
     with h_col1:
-        st.markdown("<h1 style='margin-bottom:0'>Women's Safety AI Assistant</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style= 'color:#4c1d95'>Women's Safety AI Assistant</h1>", unsafe_allow_html=True)
     with h_col2:
         st.markdown('<div class="gradient-button-wrapper">', unsafe_allow_html=True)
         if st.button("Emergency", use_container_width=True, key="header_emergency"):
@@ -426,7 +418,7 @@ else:
             # Centered Welcome Screen for Empty Chat
             st.markdown(
                 """
-                    <h2 style='text-align:center'>How can I help you today?</h2>
+                    <h2 style='text-align:center;'>How can I help you today?</h2>
                     <p style='text-align:center'>Ask about laws, safety tips, or find immediate help.</p>
                 """, unsafe_allow_html=True
             )
