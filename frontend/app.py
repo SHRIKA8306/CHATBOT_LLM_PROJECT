@@ -328,7 +328,7 @@ else:
                 if hist:
                     load_history_chat(str(hist), history)
 
-                with st.container(height=405):
+                with st.container(height=385):
                     for thread in history:
                         chat_id = thread["id"]
                         title = thread.get("title", "Untitled Chat")
