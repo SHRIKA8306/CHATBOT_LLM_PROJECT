@@ -363,22 +363,16 @@ def _apply_main_styles():
             transform: none !important;
         }
         
-        /* Target New Chat button specifically */
-        [data-testid="stSidebar"] .stButton button:has-text("New Chat") {
+        /* Target New Chat button specifically (appears after "Hi" greeting) */
+        [data-testid="stSidebar"] > div > div > div > div > div:nth-child(2) .stButton button {
             background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #d946ef 100%) !important;
             color: #FFFFFF !important;
             border: none !important;
-            border-radius: 8px !important;
+            border-radius: 12px !important;
             font-weight: 600 !important;
-            height: 40px !important;
+            height: 48px !important;
             box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2) !important;
             transition: all 0.2s ease !important;
-        }
-        
-        [data-testid="stSidebar"] .stButton button:has-text("New Chat"):hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 15px rgba(124, 58, 237, 0.3) !important;
-            filter: brightness(1.05) !important;
         }
         
         /* Target Logout button at bottom of sidebar */
@@ -430,167 +424,7 @@ def _apply_main_styles():
             filter: none !important;
             background: white !important;
         }
-
-        /* ===== CHATGPT-STYLE CHAT HISTORY ===== */
         
-        /* Sidebar main container */
-        [data-testid="stSidebar"] {
-            background-color: #FFFFFF !important;
-            border-right: 1px solid #E5E7EB !important;
-        }
-
-        /* "Your chats" heading styling */
-        [data-testid="stSidebar"] h3 {
-            color: #6B7280 !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            margin-top: 1.5rem !important;
-            margin-bottom: 0.75rem !important;
-            padding: 0 0.5rem !important;
-        }
-
-        /* Chat history container - hide the box */
-        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:has([data-testid="stColumns"]) .element-container {
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-        }
-        
-        [data-testid="stSidebar"] .stVerticalBlock > div {
-            background: transparent !important;
-            border: none !important;
-        }
-
-        /* Chat item row (contains button + 3-dot menu) */
-        [data-testid="stSidebar"] [data-testid="stColumns"] {
-            gap: 0.25rem !important;
-            align-items: stretch !important;
-        }
-
-        /* Chat button styling - main chat title button */
-        [data-testid="stSidebar"] [data-testid="stColumns"] [data-testid="column"]:first-child .stButton > button {
-            background-color: transparent !important;
-            color: #1F2937 !important;
-            border: none !important;
-            border-radius: 6px !important;
-            padding: 0.75rem 0.75rem !important;
-            height: auto !important;
-            min-height: 36px !important;
-            font-size: 14px !important;
-            font-weight: 400 !important;
-            text-align: left !important;
-            transition: all 0.2s ease !important;
-            width: 100% !important;
-            white-space: normal !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        /* Chat item hover effect */
-        [data-testid="stSidebar"] [data-testid="stColumns"] [data-testid="column"]:first-child .stButton > button:hover {
-            background-color: #F3F4F6 !important;
-            border: none !important;
-            transform: none !important;
-        }
-
-        /* Active chat item - highlight */
-        [data-testid="stSidebar"] .sidebar-active-chat ~ [data-testid="stColumns"] [data-testid="column"]:first-child .stButton > button,
-        [data-testid="stSidebar"] .sidebar-active-chat {
-            background-color: transparent !important;
-            border: none !important;
-        }
-
-        /* 3-dot menu button - appears on right side */
-        [data-testid="stSidebar"] [data-testid="stColumns"] [data-testid="column"]:last-child [data-testid="stPopover"] > button {
-            background: transparent !important;
-            border: none !important;
-            padding: 0.5rem !important;
-            min-width: 32px !important;
-            width: 32px !important;
-            height: 32px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 18px !important;
-            color: #6B7280 !important;
-            opacity: 0 !important;
-            transition: all 0.2s ease !important;
-        }
-
-        /* Show 3-dot menu on hover of chat item */
-        [data-testid="stSidebar"] [data-testid="stColumns"]:hover [data-testid="column"]:last-child [data-testid="stPopover"] > button {
-            opacity: 1 !important;
-            color: #374151 !important;
-        }
-
-        /* 3-dot menu button hover */
-        [data-testid="stSidebar"] [data-testid="stColumns"] [data-testid="column"]:last-child [data-testid="stPopover"] > button:hover {
-            background: #E5E7EB !important;
-            border-radius: 6px !important;
-        }
-
-        /* Popover menu styling */
-        [data-testid="stPopoverBody"] {
-            border-radius: 8px !important;
-            border: 1px solid #E5E7EB !important;
-            background: #FFFFFF !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-            padding: 6px !important;
-            min-width: 140px !important;
-        }
-
-        /* Popover menu items */
-        [data-testid="stPopoverBody"] .stButton > button {
-            background: transparent !important;
-            color: #1F2937 !important;
-            border: none !important;
-            border-radius: 6px !important;
-            padding: 0.5rem 0.75rem !important;
-            font-size: 13px !important;
-            height: auto !important;
-            min-height: 32px !important;
-            justify-content: flex-start !important;
-            text-align: left !important;
-            transition: all 0.15s ease !important;
-        }
-
-        /* Popover menu items hover */
-        [data-testid="stPopoverBody"] .stButton > button:hover {
-            background: #F3F4F6 !important;
-            color: #1F2937 !important;
-            transform: none !important;
-        }
-
-        /* Delete/Remove button styling in popover - make it red */
-        [data-testid="stPopoverBody"] .stButton > button:has-text("Delete") {
-            color: #EF4444 !important;
-        }
-
-        [data-testid="stPopoverBody"] .stButton > button:has-text("Delete"):hover {
-            background: #FEE2E2 !important;
-            color: #DC2626 !important;
-        }
-
-        /* Logout button - subtle styling */
-        [data-testid="stSidebar"] .stButton button:has-text("Logout") {
-            background: #F3F4F6 !important;
-            color: #6B7280 !important;
-            border: 1px solid #E5E7EB !important;
-            border-radius: 8px !important;
-            font-weight: 500 !important;
-            height: 40px !important;
-            transition: all 0.2s ease !important;
-        }
-
-        [data-testid="stSidebar"] .stButton button:has-text("Logout"):hover {
-            background: #E5E7EB !important;
-            color: #1F2937 !important;
-            border-color: #D1D5DB !important;
-        }
-
         </style>
         """,
         unsafe_allow_html=True
