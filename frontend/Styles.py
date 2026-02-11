@@ -424,7 +424,6 @@ def _apply_main_styles():
             filter: none !important;
             background: white !important;
         }
-        
         </style>
         """,
         unsafe_allow_html=True
