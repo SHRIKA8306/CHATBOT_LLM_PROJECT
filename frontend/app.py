@@ -276,8 +276,6 @@ if not st.session_state.logged_in:
                     if st.button("Cancel", use_container_width=True, key="cancel_reset"): 
                         st.session_state.forgot_mode = False
                         st.rerun()
-
-        # --- REGISTER MODE ---
         else:
             st.markdown('<div style="font-size: 20px; font-weight: 700; color: black; margin-bottom: 15px;">Create Account</div>', unsafe_allow_html=True)
             r_user = st.text_input("Username", key="r_user")
@@ -309,7 +307,7 @@ else:
 
     with st.sidebar:
         display = st.session_state.display_name or _format_display_name(st.session_state.username)
-        st.markdown(f"<h1 style='font-weight:700; font-size:30px';margin-top:0;>Hi {display}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='font-weight:700; font-size:30px';>Hi {display}</h1>", unsafe_allow_html=True)
         if st.button(" New Chat", use_container_width=True, key="new_chat_btn"):
             st.session_state.messages = []
             st.session_state.selected_history = None
