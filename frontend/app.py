@@ -163,7 +163,6 @@ def render_chat_from_history():
                         with col_copy:
                             if st.button("❐", key=f"copy_{i}", help="Copy message"):
                                copy_to_clipboard(chat.get("content", ""))
-                               st.toast("Copied to clipboard!")
    
 def api_chat(prompt: str):
     data = {"message": prompt, "user": st.session_state.username}
